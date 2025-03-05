@@ -3,7 +3,7 @@
 
 
 ## Description
-This is a Kahoot cheat made for Chrome browser and Tampermonkey. Made in vanilla js and works on most browsers.
+This is Kahoot hack is a cheat made for Chrome browser and Tampermonkey. Made in vanilla js and works on most browsers.
 
 ## Instructions
  1. Open the KaHack!.user.js

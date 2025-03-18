@@ -650,30 +650,20 @@ function answer(question, time) {
 
 let isHidden = false;
 document.addEventListener('keydown', (event) => {
-    if (event.key.toLowerCase() === "h" && event.altKey) {
-        isHidden = !isHidden;
+    let overlay = document.querySelector(".floating-ui");  // Select the overlay
+    if (!overlay) return;  // Ensure overlay exists
+
+    // 🔥 Press 'Z' to Hide the Overlay
+    if (event.key.toLowerCase() === "z") {
+        overlay.style.display = "none";  // Hide overlay
     }
 
-    if (event.key.toLowerCase() === "x" && event.altKey) {
-        document.body.removeChild(uiElement);
-        autoAnswer = false;
-        showAnswers = false;
-    }
-
-    if (event.key.toLowerCase() === "z") {  // 🔥 Pressing 'K' toggles overlay
-        if (uiElement.style.display === "none") {
-            uiElement.style.display = "block";
-        } else {
-            uiElement.style.display = "none";
-        }
-    }
-
-    if (isHidden) {
-        uiElement.style.display = 'none';
-    } else {
-        uiElement.style.display = 'block';
+    // 🔥 Press 'X' to Show the Overlay
+    if (event.key.toLowerCase() === "x") {
+        overlay.style.display = "block";  // Show overlay
     }
 });
+
 
 
 setInterval(function () {

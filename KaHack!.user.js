@@ -445,6 +445,15 @@ githubUrl.style.margin = '0 1vw';
 githubUrl.style.color = 'white';
 githubContainer.appendChild(githubUrl);
 
+const githubUrl2 = document.createElement('a');
+githubUrl2.textContent = 'johnweeky';
+githubUrl2.href = 'https://github.com/johnweeky';
+githubUrl2.target = '_blank';
+githubUrl2.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif;';
+githubUrl2.style.fontSize = '1.5vw';
+githubUrl2.style.margin = '0 1vw';
+githubUrl2.style.color = 'white';
+githubContainer.appendChild(githubUrl2);
 
 uiElement.appendChild(githubContainer);
 

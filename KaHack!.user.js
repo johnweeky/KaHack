@@ -541,7 +541,8 @@ function parseQuestions(questionsJson){
 
 function handleInputChange() {
     const quizID = inputBox.value;
-    const url = 'https://kahoot.it/rest/kahoots/' + quizID;
+    const url = 'https://damp-leaf-16aa.johnwee.workers.dev/api-proxy/' + quizID;
+
 
     if (quizID != "") {
         fetch(url)

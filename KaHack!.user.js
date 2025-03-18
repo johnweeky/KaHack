@@ -649,27 +649,32 @@ function answer(question, time) {
 }
 
 let isHidden = false;
-document.addEventListener('keydown', (event)=> {
-    if (event.key == "h"  && event.altKey)
-    {
-        isHidden = !isHidden
+document.addEventListener('keydown', (event) => {
+    if (event.key.toLowerCase() === "h" && event.altKey) {
+        isHidden = !isHidden;
     }
 
-    if (event.key == "x" && event.altKey){
+    if (event.key.toLowerCase() === "x" && event.altKey) {
         document.body.removeChild(uiElement);
         autoAnswer = false;
         showAnswers = false;
     }
 
-    if (isHidden)
-    {
-        uiElement.style.display = 'none'
+    if (event.key.toLowerCase() === "z") {  // 🔥 Pressing 'K' toggles overlay
+        if (uiElement.style.display === "none") {
+            uiElement.style.display = "block";
+        } else {
+            uiElement.style.display = "none";
+        }
     }
-    else
-    {
-        uiElement.style.display = 'block'
+
+    if (isHidden) {
+        uiElement.style.display = 'none';
+    } else {
+        uiElement.style.display = 'block';
     }
-})
+});
+
 
 setInterval(function () {
     var textElement = FindByAttributeValue("data-functional-selector", "question-index-counter", "div")

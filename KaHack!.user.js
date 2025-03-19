@@ -653,16 +653,17 @@ document.addEventListener('keydown', (event) => {
     let overlay = document.querySelector(".floating-ui");  // Select the overlay
     if (!overlay) return;  // Ensure overlay exists
 
-    // 🔥 Press 'Z' to Hide the Overlay
-    if (event.key.toLowerCase() === "z") {
+    // 🔥 Press 'Alt + Z' to Hide the Overlay
+    if (event.key.toLowerCase() === "z" && event.altKey) {
         overlay.style.display = "none";  // Hide overlay
     }
 
-    // 🔥 Press 'X' to Show the Overlay
-    if (event.key.toLowerCase() === "x") {
+    // 🔥 Press 'Alt + X' to Show the Overlay
+    if (event.key.toLowerCase() === "x" && event.altKey) {
         overlay.style.display = "block";  // Show overlay
     }
 });
+
 
 
 

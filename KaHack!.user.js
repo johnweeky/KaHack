@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KaHack!
 // @version      1.0.26
-// @description  A hack for kahoot.it! Adds an Enter button below the input. If direct lookup fails, a dropdown of public options appears.
+// @description  A hack for kahoot.it! Adds an Enter button below the input. When pressed, it performs a lookup. If direct lookup fails, a dropdown of public options appears.
 // @namespace    https://github.com/johnweeky
 // @updateURL    https://github.com/johnweeky/KaHack/raw/main/KaHack!.meta.js
 // @downloadURL  https://github.com/johnweeky/KaHack/raw/main/KaHack!.user.js
@@ -10,7 +10,7 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=kahoot.it
 // @grant        none
 // ==/UserScript==
-var Version = '1.0.26'
+var Version = '1.0.26';
 
 var questions = [];
 var info = {
@@ -26,26 +26,30 @@ var autoAnswer = false;
 var showAnswers = false;
 var inputLag = 100;
 
+// Helper: Finds an element by attribute value.
 function FindByAttributeValue(attribute, value, element_type) {
-  element_type = element_type || "*";
-  var All = document.getElementsByTagName(element_type);
-  for (var i = 0; i < All.length; i++) {
-    if (All[i].getAttribute(attribute) == value) { return All[i]; }
-  }
+    element_type = element_type || "*";
+    var All = document.getElementsByTagName(element_type);
+    for (var i = 0; i < All.length; i++) {
+        if (All[i].getAttribute(attribute) == value) { return All[i]; }
+    }
 }
 
-// --- Sanitize input ---
-// If the user pastes a URL or a string with "https://" or "http://", this function extracts only the last segment.
+// Sanitize input: trims and, if the string begins with "https//" (missing colon),
+// fixes it to "https://" then returns only the last segment if a URL was provided.
 function sanitizeInput(val) {
     val = val.trim();
+    if (val.indexOf("https//") === 0) {
+        val = val.replace("https//", "https://");
+    }
     if (/^https?:\/\//i.test(val)) {
-        // Remove protocol and split on slashes; use the last non-empty segment.
         var parts = val.replace(/^https?:\/\//i, '').split('/');
         return parts.filter(Boolean).pop();
     }
     return val;
 }
 
+// --- UI Creation (unchanged from your original style) ---
 const uiElement = document.createElement('div');
 uiElement.className = 'floating-ui';
 uiElement.style.position = 'absolute';
@@ -126,7 +130,8 @@ uiElement.appendChild(header);
 
 const inputContainer = document.createElement('div');
 inputContainer.style.display = 'flex';
-inputContainer.style.justifyContent = 'center';
+inputContainer.style.flexDirection = 'column';
+inputContainer.style.alignItems = 'center';
 
 const inputBox = document.createElement('input');
 inputBox.type = 'text';
@@ -143,16 +148,18 @@ inputBox.style.textAlign = 'center';
 inputBox.style.fontSize = '1.15vw';
 inputContainer.appendChild(inputBox);
 
-// Add an "Enter" button below the input
+// Add an Enter button below the input (displayed as block)
 const enterButton = document.createElement('button');
 enterButton.textContent = 'Enter';
+enterButton.style.display = 'block';
 enterButton.style.marginTop = '0.5vw';
+enterButton.style.width = '27.8vw';
 enterButton.style.fontSize = '1.15vw';
 enterButton.style.cursor = 'pointer';
 enterButton.addEventListener('click', handleInputChange);
 inputContainer.appendChild(enterButton);
 
-// Create dropdown for fallback suggestions
+// Dropdown for public search suggestions.
 const dropdown = document.createElement('div');
 dropdown.style.position = 'absolute';
 dropdown.style.top = 'calc(100% + 0.5vw)';
@@ -307,25 +314,25 @@ style.textContent = `
     border: none;
     outline: none;
     cursor: ew-resize;
-    appearance: none; /* Remove default appearance */
-    height: 0; /* Set the height to match the thumb height */
+    appearance: none;
+    height: 0;
 }
 .custom-slider::-webkit-slider-thumb {
-    appearance: none; /* Remove default appearance */
-    width: 1.75vw; /* Set width of the slider handle */
-    height: 1.75vw; /* Set height of the slider handle */
-    background-color: rgb(47, 47, 47); /* Set handle color to dark gray */
-    border-radius: 50%; /* Create a circle for the handle */
-    cursor: ew-resize; /* Horizontal resize cursor */
-    margin-top: -0.5vw; /* Adjust margin-top to vertically center the thumb */
+    appearance: none;
+    width: 1.75vw;
+    height: 1.75vw;
+    background-color: rgb(47, 47, 47);
+    border-radius: 50%;
+    cursor: ew-resize;
+    margin-top: -0.5vw;
 }
 .custom-slider::-webkit-slider-runnable-track {
-    width: 100%; /* Set track width to 100% */
-    height: 0.75vw; /* Set track height to match the thumb height */
-    background-color: white; /* Set track color to white */
-    cursor: ew-resize; /* Horizontal resize cursor */
-    border-radius: 1vw; /* Set rounded corners for the track */
-    background: linear-gradient(to right, red, yellow, limegreen); /* Gradient */
+    width: 100%;
+    height: 0.75vw;
+    background-color: white;
+    cursor: ew-resize;
+    border-radius: 1vw;
+    background: linear-gradient(to right, red, yellow, limegreen);
 }
 :root {
   --switch-width: 5.9vw;
@@ -420,7 +427,7 @@ inputLagLabel.style.color = 'white';
 uiElement.appendChild(inputLagLabel);
 
 const versionLabel = document.createElement('h1');
-versionLabel.textContent = 'KaHack! V'+Version;
+versionLabel.textContent = 'KaHack! V' + Version;
 versionLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
 versionLabel.style.fontSize = '2.5vw';
 versionLabel.style.display = 'block';
@@ -472,10 +479,8 @@ closeButton.addEventListener('click', () => {
 });
 
 let isMinimized = false;
-
 minimizeButton.addEventListener('click', () => {
     isMinimized = !isMinimized;
-
     if (isMinimized) {
         header.style.display = 'none';
         header2.style.display = 'none';
@@ -484,13 +489,11 @@ minimizeButton.addEventListener('click', () => {
         inputContainer.style.display = 'none';
         questionsLabel.style.display = 'none';
         versionLabel.style.display = 'none';
-        inputLagLabel.style.display='none';
+        inputLagLabel.style.display = 'none';
         githubContainer.style.display = 'none';
-
         sliderContainer.style.display = 'none';
         autoAnswerSwitchContainer.style.display = 'none';
         showAnswersSwitchContainer.style.display = 'none';
-
         uiElement.style.height = '2.5vw';
         handle.style.height = '100%';
         closeButton.style.height = '100%';
@@ -503,14 +506,12 @@ minimizeButton.addEventListener('click', () => {
         inputContainer.style.display = 'flex';
         questionsLabel.style.display = 'block';
         versionLabel.style.display = 'block';
-        inputLagLabel.style.display='block';
+        inputLagLabel.style.display = 'block';
         githubContainer.style.display = 'block';
-
         handle.style.height = '2.5vw';
         uiElement.style.height = 'auto';
         closeButton.style.height = '2.5vw';
         minimizeButton.style.height = '2.5vw';
-
         sliderContainer.style.display = 'flex';
         autoAnswerSwitchContainer.style.display = 'flex';
         showAnswersSwitchContainer.style.display = 'flex';
@@ -519,13 +520,11 @@ minimizeButton.addEventListener('click', () => {
 
 let isDragging = false;
 let offsetX, offsetY;
-
 handle.addEventListener('mousedown', (e) => {
     isDragging = true;
     offsetX = e.clientX - uiElement.getBoundingClientRect().left;
     offsetY = e.clientY - uiElement.getBoundingClientRect().top;
 });
-
 document.addEventListener('mousemove', (e) => {
     if (isDragging) {
         const x = e.clientX - offsetX;
@@ -534,7 +533,6 @@ document.addEventListener('mousemove', (e) => {
         uiElement.style.top = y + 'px';
     }
 });
-
 document.addEventListener('mouseup', () => {
     isDragging = false;
 });
@@ -595,14 +593,12 @@ function searchPublicUUID(searchTerm) {
 }
 
 // --- Lookup Function ---
-// It now encodes the input value (after sanitization) to ensure a valid URL.
-// If the direct lookup fails, it calls searchPublicUUID() to offer dropdown suggestions.
+// The lookup is triggered only by the Enter button.
+// It sanitizes the input and uses encodeURIComponent when building the URL.
 function handleInputChange() {
     var rawInput = inputBox.value;
     var quizID = sanitizeInput(rawInput);
-    // Use encodeURIComponent when building the URL.
     const url = 'https://damp-leaf-16aa.johnwee.workers.dev/api-proxy/' + encodeURIComponent(quizID);
-
     if (quizID !== "") {
         fetch(url)
             .then(response => {
@@ -620,7 +616,7 @@ function handleInputChange() {
             .catch(error => {
                 inputBox.style.backgroundColor = 'red';
                 info.numQuestions = 0;
-                // If lookup fails, use public search to offer options.
+                // Fallback: offer public search suggestions.
                 searchPublicUUID(quizID);
             });
     } else {
@@ -629,7 +625,8 @@ function handleInputChange() {
     }
 }
 
-inputBox.addEventListener('input', handleInputChange);
+// Remove the "input" event listener so that lookup only occurs on button click.
+// inputBox.addEventListener('input', handleInputChange);
 
 document.body.appendChild(uiElement);
 
@@ -673,12 +670,12 @@ function onQuestionStart(){
 }
 
 function highlightAnswers(question){
-    question.answers.forEach(function(answer) {
+    question.answers.forEach(function (answer) {
         setTimeout(function() {
             FindByAttributeValue("data-functional-selector", 'answer-' + answer, "button").style.backgroundColor = 'rgb(0, 255, 0)';
         }, 0);
     });
-    question.incorrectAnswers.forEach(function(answer) {
+    question.incorrectAnswers.forEach(function (answer) {
         setTimeout(function() {
             FindByAttributeValue("data-functional-selector", 'answer-' + answer, "button").style.backgroundColor = 'rgb(255, 0, 0)';
         }, 0);
@@ -687,8 +684,7 @@ function highlightAnswers(question){
 
 function answer(question, time) {
     Answered_PPT = PPT;
-    var delay = 0;
-    if (question.type == 'multiple_select_quiz') delay = 60;
+    var delay = (question.type == 'multiple_select_quiz') ? 60 : 0;
     setTimeout(function() {
         if (question.type == 'quiz') {
             const key = (+question.answers[0] + 1).toString();

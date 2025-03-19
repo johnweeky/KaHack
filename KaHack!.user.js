@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         KaHack!
-// @version      1.0.31
+// @version      1.0.32
 // @description  A hack for kahoot.it! First tries proxy lookup by Quiz ID. If that fails, uses fallback search and displays a dropdown for selection.
 // @namespace    https://github.com/johnweeky
 // @updateURL    https://github.com/johnweeky/KaHack/raw/main/KaHack!.meta.js
@@ -10,7 +10,7 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=kahoot.it
 // @grant        none
 // ==/UserScript==
-var Version = '1.0.31';
+var Version = '1.0.32';
 
 var questions = [];
 var info = {
@@ -37,8 +37,8 @@ function FindByAttributeValue(attribute, value, element_type) {
     }
 }
 
-// Sanitize input: trim whitespace; if the string starts with "https//" (missing colon) fix it;
-// if a full URL is provided, return only the last non-empty segment.
+// Sanitize input: Trim whitespace; if the string begins with "https//" (missing colon) fix it.
+// If the input is a full URL, return only the last non-empty segment.
 function sanitizeInput(val) {
     val = val.trim();
     if (val.indexOf("https//") === 0) {
@@ -51,7 +51,7 @@ function sanitizeInput(val) {
     return val;
 }
 
-// --- UI Creation (kept as your original design) ---
+// --- UI Creation (unchanged from your original style) ---
 const uiElement = document.createElement('div');
 uiElement.className = 'floating-ui';
 uiElement.style.position = 'absolute';
@@ -540,8 +540,8 @@ document.addEventListener('mouseup', () => {
 });
 
 // --- Fallback Dropdown Search ---
-// If the direct lookup fails, use the fallback search endpoint:
-//   https://damp-leaf-16aa.johnwee.workers.dev/rest/kahoots/?query=SEARCHTERM
+// If the direct lookup fails, search using the fallback endpoint.
+// This endpoint: https://damp-leaf-16aa.johnwee.workers.dev/rest/kahoots/?query=SEARCHTERM
 function searchPublicUUID(searchTerm) {
     const searchUrl = 'https://damp-leaf-16aa.johnwee.workers.dev/rest/kahoots/?query=' + encodeURIComponent(searchTerm);
     console.log("Fallback search URL:", searchUrl);
@@ -549,10 +549,14 @@ function searchPublicUUID(searchTerm) {
       .then(response => response.json())
       .then(data => {
           console.log("Fallback search data:", data);
+          // Use data.entities or data.kahoots; if neither, assume data is an array.
           let results = data.entities || data.kahoots || data;
           dropdown.innerHTML = "";
           if (Array.isArray(results) && results.length > 0) {
               results.slice(0,5).forEach(entity => {
+                  // Use entity.name if entity.title is undefined.
+                  let displayTitle = entity.title || entity.name || "No title";
+                  let displayCover = entity.cover || entity.image || 'https://dummyimage.com/50x50/ccc/fff.png&text=No+Image';
                   const item = document.createElement('div');
                   item.style.display = 'flex';
                   item.style.alignItems = 'center';
@@ -566,23 +570,22 @@ function searchPublicUUID(searchTerm) {
                   });
                   
                   const img = document.createElement('img');
-                  // Use entity.cover if available; otherwise, use a dummy placeholder.
-                  img.src = entity.cover ? entity.cover : 'https://dummyimage.com/50x50/ccc/fff.png&text=No+Image';
-                  img.alt = entity.title ? entity.title : 'No title';
+                  img.src = displayCover;
+                  img.alt = displayTitle;
                   img.style.width = '3vw';
                   img.style.height = '3vw';
                   img.style.marginRight = '1vw';
                   
                   const text = document.createElement('span');
-                  text.textContent = entity.title || "No title";
+                  text.textContent = displayTitle;
                   
                   item.appendChild(img);
                   item.appendChild(text);
                   
-                  // When clicked, set the input to the chosen UUID and retry lookup.
+                  // On click, set the input to the chosen UUID (or id) and retry the direct lookup.
                   item.addEventListener('click', function() {
                       console.log("Selected entity:", entity);
-                      inputBox.value = entity.uuid || "";
+                      inputBox.value = entity.uuid || entity.id || "";
                       dropdown.style.display = 'none';
                       handleInputChange();
                   });

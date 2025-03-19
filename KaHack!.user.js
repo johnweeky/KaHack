@@ -650,19 +650,24 @@ function answer(question, time) {
 
 let isHidden = false;
 document.addEventListener('keydown', (event) => {
+    console.log(`Key pressed: "${event.key}"`);  // Debugging log for key press
+
     let overlay = document.querySelector(".floating-ui");  // Select the overlay
-    if (!overlay) return;  // Ensure overlay exists
+    if (!overlay) return console.log("Overlay not found!");  // Ensure overlay exists
 
     // 🔥 Press ',' (Comma) to Hide the Overlay
     if (event.key === ",") {
+        console.log("Hiding overlay...");
         overlay.style.display = "none";  // Hide overlay
     }
 
     // 🔥 Press '.' (Dot) to Show the Overlay
     if (event.key === ".") {
+        console.log("Showing overlay...");
         overlay.style.display = "block";  // Show overlay
     }
 });
+
 
 
 

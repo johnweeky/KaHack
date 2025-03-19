@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KaHack!
 // @version      1.0.26
-// @description  A hack for kahoot.it! Press Enter after typing a Quiz ID or name to perform lookup.
+// @description  A hack for kahoot.it! If direct quiz lookup fails, it shows a dropdown with a few public options.
 // @namespace    https://github.com/johnweeky
 // @updateURL    https://github.com/johnweeky/KaHack/raw/main/KaHack!.meta.js
 // @downloadURL  https://github.com/johnweeky/KaHack/raw/main/KaHack!.user.js
@@ -10,597 +10,732 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=kahoot.it
 // @grant        none
 // ==/UserScript==
+var Version = '1.0.26'
 
-(function() {
-    "use strict";
+var questions = [];
+var info = {
+    numQuestions: 0,
+    questionNum: -1,
+    lastAnsweredQuestion: -1,
+    defaultIL:true,
+    ILSetQuestion:-1,
+};
+var PPT = 950;
+var Answered_PPT = 950;
+var autoAnswer = false;
+var showAnswers = false;
+var inputLag = 100;
 
-    var Version = '1.0.26';
-    var questions = [];
-    var info = {
-        numQuestions: 0,
-        questionNum: -1,
-        lastAnsweredQuestion: -1,
-        defaultIL: true,
-        ILSetQuestion: -1,
-    };
-    var PPT = 950;
-    var Answered_PPT = 950;
-    var autoAnswer = false;
-    var showAnswers = false;
-    var inputLag = 100;
+function FindByAttributeValue(attribute, value, element_type) {
+  element_type = element_type || "*";
+  var All = document.getElementsByTagName(element_type);
+  for (var i = 0; i < All.length; i++) {
+    if (All[i].getAttribute(attribute) == value) { return All[i]; }
+  }
+}
 
-    // Helper: find element by attribute value.
-    function FindByAttributeValue(attribute, value, element_type) {
-        element_type = element_type || "*";
-        var All = document.getElementsByTagName(element_type);
-        for (var i = 0; i < All.length; i++) {
-            if (All[i].getAttribute(attribute) === value) {
-                return All[i];
-            }
-        }
+// Create UI (same as previous code)
+const uiElement = document.createElement('div');
+uiElement.className = 'floating-ui';
+uiElement.style.position = 'absolute';
+uiElement.style.top = '5%';
+uiElement.style.left = '5%';
+uiElement.style.width = '33vw';
+uiElement.style.height = 'auto';
+uiElement.style.backgroundColor = '#381272';
+uiElement.style.borderRadius = '1vw';
+uiElement.style.boxShadow = '0px 0px 10px 0px rgba(0, 0, 0, 0.5)';
+uiElement.style.zIndex = '9999';
+
+const handle = document.createElement('div');
+handle.className = 'handle';
+handle.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
+handle.style.fontSize = '1.5vw';
+handle.textContent = 'KaHack!';
+handle.style.color = 'white';
+handle.style.width = '97.5%';
+handle.style.height = '2.5vw';
+handle.style.backgroundColor = '#321066';
+handle.style.borderRadius = '1vw 1vw 0 0';
+handle.style.cursor = 'grab';
+handle.style.textAlign = 'left';
+handle.style.paddingLeft = '2.5%';
+handle.style.lineHeight = '2vw';
+uiElement.appendChild(handle);
+
+const closeButton = document.createElement('div');
+closeButton.className = 'close-button';
+closeButton.textContent = '✕';
+closeButton.style.position = 'absolute';
+closeButton.style.top = '0';
+closeButton.style.right = '0';
+closeButton.style.width = '12.5%';
+closeButton.style.height = '2.5vw';
+closeButton.style.backgroundColor = 'red';
+closeButton.style.color = 'white';
+closeButton.style.borderRadius = '0 1vw 0 0';
+closeButton.style.display = 'flex';
+closeButton.style.justifyContent = 'center';
+closeButton.style.alignItems = 'center';
+closeButton.style.cursor = 'pointer';
+handle.appendChild(closeButton);
+
+const minimizeButton = document.createElement('div');
+minimizeButton.className = 'minimize-button';
+minimizeButton.textContent = '─';
+minimizeButton.style.color = 'white';
+minimizeButton.style.position = 'absolute';
+minimizeButton.style.top = '0';
+minimizeButton.style.right = '12.5%';
+minimizeButton.style.width = '12.5%';
+minimizeButton.style.height = '2.5vw';
+minimizeButton.style.backgroundColor = 'gray';
+minimizeButton.style.borderRadius = '0 0 0 0';
+minimizeButton.style.display = 'flex';
+minimizeButton.style.justifyContent = 'center';
+minimizeButton.style.alignItems = 'center';
+minimizeButton.style.cursor = 'pointer';
+handle.appendChild(minimizeButton);
+
+const header = document.createElement('h2');
+header.textContent = 'QUIZ ID';
+header.style.display = 'block';
+header.style.margin = '1vw';
+header.style.textAlign = 'center';
+header.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
+header.style.fontSize = '2vw';
+header.style.color = 'white';
+header.style.textShadow = `
+  -1px -1px 0 rgb(47, 47, 47),
+  1px -1px 0 rgb(47, 47, 47),
+  -1px 1px 0 rgb(47, 47, 47),
+  1px 1px 0 rgb(47, 47, 47)
+`;
+uiElement.appendChild(header);
+
+// Create input container and input box.
+const inputContainer = document.createElement('div');
+inputContainer.style.display = 'flex';
+inputContainer.style.justifyContent = 'center';
+
+const inputBox = document.createElement('input');
+inputBox.type = 'text';
+inputBox.style.color = 'black';
+inputBox.placeholder = 'Quiz Id here...';
+inputBox.style.width = '27.8vw';
+inputBox.style.height = '1.5vw';
+inputBox.style.margin = '0';
+inputBox.style.padding = '0';
+inputBox.style.border = '.1vw solid black';
+inputBox.style.borderRadius = '1vw';
+inputBox.style.outline = 'none';
+inputBox.style.textAlign = 'center';
+inputBox.style.fontSize = '1.15vw';
+inputContainer.appendChild(inputBox);
+
+// Create dropdown element (positioned below the input)
+const dropdown = document.createElement('div');
+dropdown.style.display = 'none';
+dropdown.style.position = 'absolute';
+dropdown.style.top = 'calc(100% + 0.5vw)';
+dropdown.style.width = '27.8vw';
+dropdown.style.backgroundColor = 'white';
+dropdown.style.border = '.1vw solid black';
+dropdown.style.borderRadius = '0.5vw';
+dropdown.style.zIndex = '10000';
+inputContainer.appendChild(dropdown);
+
+uiElement.appendChild(inputContainer);
+
+const header2 = document.createElement('h2');
+header2.textContent = 'POINTS PER QUESTION';
+header2.style.display = 'block';
+header2.style.margin = '1vw';
+header2.style.textAlign = 'center';
+header2.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
+header2.style.fontSize = '2vw';
+header2.style.color = 'white';
+header2.style.textShadow = `
+  -1px -1px 0 rgb(47, 47, 47),
+  1px -1px 0 rgb(47, 47, 47),
+  -1px 1px 0 rgb(47, 47, 47),
+  1px 1px 0 rgb(47, 47, 47)
+`;
+uiElement.appendChild(header2);
+
+const sliderContainer = document.createElement('div');
+sliderContainer.style.width = '80%';
+sliderContainer.style.margin = '1vw auto';
+sliderContainer.style.display = 'flex';
+sliderContainer.style.alignItems = 'center';
+sliderContainer.style.justifyContent = 'center';
+
+const pointsLabel = document.createElement('span');
+pointsLabel.textContent = 'Points per Question: 950';
+pointsLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
+pointsLabel.style.fontSize = '1.5vw';
+pointsLabel.style.margin = '1vw';
+pointsLabel.style.marginLeft = '1vw';
+pointsLabel.style.marginRight = '1vw';
+pointsLabel.style.color = 'white';
+sliderContainer.appendChild(pointsLabel);
+
+const pointsSlider = document.createElement('input');
+pointsSlider.type = 'range';
+pointsSlider.min = '500';
+pointsSlider.max = '1000';
+pointsSlider.value = '950';
+pointsSlider.style.width = '70%';
+pointsSlider.style.marginLeft = '1vw';
+pointsSlider.style.marginRight = '1vw';
+pointsSlider.style.border = 'none';
+pointsSlider.style.outline = 'none';
+pointsSlider.style.cursor = 'ew-resize';
+pointsSlider.className = 'custom-slider';
+sliderContainer.appendChild(pointsSlider);
+
+uiElement.appendChild(sliderContainer);
+
+pointsSlider.addEventListener('input', () => {
+    const points = +pointsSlider.value;
+    PPT = points;
+    pointsLabel.textContent = 'Points per Question: ' + points;
+});
+
+const header3 = document.createElement('h2');
+header3.textContent = 'ANSWERING';
+header3.style.display = 'block';
+header3.style.margin = '1vw';
+header3.style.textAlign = 'center';
+header3.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
+header3.style.fontSize = '2vw';
+header3.style.color = 'white';
+header3.style.textShadow = `
+  -1px -1px 0 rgb(47, 47, 47),
+  1px -1px 0 rgb(47, 47, 47),
+  -1px 1px 0 rgb(47, 47, 47),
+  1px 1px 0 rgb(47, 47, 47)
+`;
+uiElement.appendChild(header3);
+
+const autoAnswerSwitchContainer = document.createElement('div');
+autoAnswerSwitchContainer.className = 'switch-container';
+autoAnswerSwitchContainer.style.display = 'flex';
+autoAnswerSwitchContainer.style.alignItems = 'center';
+autoAnswerSwitchContainer.style.justifyContent = 'center';
+uiElement.appendChild(autoAnswerSwitchContainer);
+
+const autoAnswerLabel = document.createElement('span');
+autoAnswerLabel.textContent = 'Auto Answer';
+autoAnswerLabel.className = 'switch-label';
+autoAnswerLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
+autoAnswerLabel.style.fontSize = '1.5vw';
+autoAnswerLabel.style.color = 'white';
+autoAnswerLabel.style.margin = '2.5vw';
+autoAnswerSwitchContainer.appendChild(autoAnswerLabel);
+
+const autoAnswerSwitch = document.createElement('label');
+autoAnswerSwitch.className = 'switch';
+autoAnswerSwitchContainer.appendChild(autoAnswerSwitch);
+
+const autoAnswerInput = document.createElement('input');
+autoAnswerInput.type = 'checkbox';
+autoAnswerInput.addEventListener('change', function() {
+    autoAnswer = this.checked;
+    info.ILSetQuestion = info.questionNum;
+});
+autoAnswerSwitch.appendChild(autoAnswerInput);
+
+const autoAnswerSlider = document.createElement('span');
+autoAnswerSlider.className = 'slider';
+autoAnswerSwitch.appendChild(autoAnswerSlider);
+
+const showAnswersSwitchContainer = document.createElement('div');
+showAnswersSwitchContainer.className = 'switch-container';
+showAnswersSwitchContainer.style.display = 'flex';
+showAnswersSwitchContainer.style.alignItems = 'center';
+showAnswersSwitchContainer.style.justifyContent = 'center';
+uiElement.appendChild(showAnswersSwitchContainer);
+
+const showAnswersLabel = document.createElement('span');
+showAnswersLabel.textContent = 'Show Answers';
+showAnswersLabel.className = 'switch-label';
+showAnswersLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
+showAnswersLabel.style.fontSize = '1.5vw';
+showAnswersLabel.style.color = 'white';
+showAnswersLabel.style.margin = '2.5vw';
+showAnswersSwitchContainer.appendChild(showAnswersLabel);
+
+const showAnswersSwitch = document.createElement('label');
+showAnswersSwitch.className = 'switch';
+showAnswersSwitchContainer.appendChild(showAnswersSwitch);
+
+const showAnswersInput = document.createElement('input');
+showAnswersInput.type = 'checkbox';
+showAnswersInput.addEventListener('change', function() {
+    showAnswers = this.checked;
+});
+showAnswersSwitch.appendChild(showAnswersInput);
+
+const showAnswersSlider = document.createElement('span');
+showAnswersSlider.className = 'slider';
+showAnswersSwitch.appendChild(showAnswersSlider);
+
+const style = document.createElement('style');
+style.textContent = `
+.custom-slider {
+    background: white;
+    border: none;
+    outline: none;
+    cursor: ew-resize;
+    appearance: none;
+    height: 0;
+}
+.custom-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 1.75vw;
+    height: 1.75vw;
+    background-color: rgb(47, 47, 47);
+    border-radius: 50%;
+    cursor: ew-resize;
+    margin-top: -0.5vw;
+}
+.custom-slider::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 0.75vw;
+    background-color: white;
+    cursor: ew-resize;
+    border-radius: 1vw;
+    background: linear-gradient(to right, red, yellow, limegreen);
+}
+:root {
+  --switch-width: 5.9vw;
+  --switch-height: 3.3vw;
+  --slider-size: 2.5vw;
+  --slider-thumb-size: 1.3vw;
+}
+.switch {
+  position: relative;
+  display: inline-block;
+  width: var(--switch-width);
+  height: var(--switch-height);
+  margin: 2.5vw;
+}
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: red;
+  transition: 0.8s;
+  border-radius: .5vw;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: var(--slider-size);
+  width: var(--slider-size);
+  left: calc(var(--slider-thumb-size) / 3);
+  bottom: calc(var(--slider-thumb-size) / 3);
+  background-color: rgb(43, 43, 43);
+  transition: 0.8s;
+  border-radius: .5vw;
+}
+input:checked + .slider {
+  background-color: green;
+}
+input:focus + .slider {
+  box-shadow: 0 0 1px green;
+}
+input:checked + .slider:before {
+  transform: translateX(calc(var(--slider-size)));
+}
+`;
+document.head.appendChild(style);
+
+const header4 = document.createElement('h2');
+header4.textContent = 'INFO';
+header4.style.display = 'block';
+header4.style.margin = '1vw';
+header4.style.textAlign = 'center';
+header4.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
+header4.style.fontSize = '2vw';
+header4.style.color = 'white';
+header4.style.textShadow = `
+  -1px -1px 0 rgb(47, 47, 47),
+  1px -1px 0 rgb(47, 47, 47),
+  -1px 1px 0 rgb(47, 47, 47),
+  1px 1px 0 rgb(47, 47, 47)
+`;
+uiElement.appendChild(header4);
+
+const questionsLabel = document.createElement('span');
+questionsLabel.textContent = 'Question 0 / 0';
+questionsLabel.style.display = 'block';
+questionsLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
+questionsLabel.style.fontSize = '1.5vw';
+questionsLabel.style.textAlign = 'center';
+questionsLabel.style.margin = '1vw';
+questionsLabel.style.marginLeft = '1vw';
+questionsLabel.style.marginRight = '1vw';
+questionsLabel.style.color = 'white';
+uiElement.appendChild(questionsLabel);
+
+const inputLagLabel = document.createElement('span');
+inputLagLabel.textContent = 'Input lag : 125 ms';
+inputLagLabel.style.display = 'block';
+inputLagLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
+inputLagLabel.style.fontSize = '1.5vw';
+inputLagLabel.style.textAlign = 'center';
+inputLagLabel.style.margin = '1vw';
+inputLagLabel.style.marginLeft = '1vw';
+inputLagLabel.style.marginRight = '1vw';
+inputLagLabel.style.color = 'white';
+uiElement.appendChild(inputLagLabel);
+
+const versionLabel = document.createElement('h1');
+versionLabel.textContent = 'KaHack! V'+Version;
+versionLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
+versionLabel.style.fontSize = '2.5vw';
+versionLabel.style.display = 'block';
+versionLabel.style.textAlign = 'center';
+versionLabel.style.marginTop = '3.5vw';
+versionLabel.style.marginLeft = '1vw';
+versionLabel.style.marginRight = '1vw';
+versionLabel.style.color = 'white';
+uiElement.appendChild(versionLabel);
+
+const githubContainer = document.createElement('div');
+githubContainer.style.textAlign = 'center';
+githubContainer.style.marginTop = '1vw';
+
+const githubLabel = document.createElement('span');
+githubLabel.textContent = 'GitHub: ';
+githubLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
+githubLabel.style.fontSize = '1.5vw';
+githubLabel.style.margin = '0 1vw';
+githubLabel.style.color = 'white';
+githubContainer.appendChild(githubLabel);
+
+const githubUrl = document.createElement('a');
+githubUrl.textContent = 'John Wee';
+githubUrl.href = 'https://johnwee.co';
+githubUrl.target = '_blank';
+githubUrl.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
+githubUrl.style.fontSize = '1.5vw';
+githubUrl.style.margin = '0 1vw';
+githubUrl.style.color = 'white';
+githubContainer.appendChild(githubUrl);
+
+const githubUrl2 = document.createElement('a');
+githubUrl2.textContent = 'johnweeky';
+githubUrl2.href = 'https://github.com/johnweeky';
+githubUrl2.target = '_blank';
+githubUrl2.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
+githubUrl2.style.fontSize = '1.5vw';
+githubUrl2.style.margin = '0 1vw';
+githubUrl2.style.color = 'white';
+githubContainer.appendChild(githubUrl2);
+
+uiElement.appendChild(githubContainer);
+
+closeButton.addEventListener('click', () => {
+    document.body.removeChild(uiElement);
+  	autoAnswer = false;
+  	showAnswers = false;
+});
+
+let isMinimized = false;
+
+minimizeButton.addEventListener('click', () => {
+    isMinimized = !isMinimized;
+
+    if (isMinimized) {
+        header.style.display = 'none';
+        header2.style.display = 'none';
+        header3.style.display = 'none';
+        header4.style.display = 'none';
+        inputContainer.style.display = 'none';
+        questionsLabel.style.display = 'none';
+        versionLabel.style.display = 'none';
+        inputLagLabel.style.display='none';
+        githubContainer.style.display = 'none';
+
+        sliderContainer.style.display = 'none';
+        autoAnswerSwitchContainer.style.display = 'none';
+        showAnswersSwitchContainer.style.display = 'none';
+
+        uiElement.style.height = '2.5vw';
+        handle.style.height = '100%';
+        closeButton.style.height = '100%';
+        minimizeButton.style.height = '100%';
+    } else {
+        header.style.display = 'block';
+        header2.style.display = 'block';
+        header3.style.display = 'block';
+        header4.style.display = 'block';
+        inputContainer.style.display = 'flex';
+        questionsLabel.style.display = 'block';
+        versionLabel.style.display = 'block';
+        inputLagLabel.style.display='block';
+        githubContainer.style.display = 'block';
+
+        handle.style.height = '2.5vw';
+        uiElement.style.height = 'auto';
+        closeButton.style.height = '2.5vw';
+        minimizeButton.style.height = '2.5vw';
+
+        sliderContainer.style.display = 'flex';
+        autoAnswerSwitchContainer.style.display = 'flex';
+        showAnswersSwitchContainer.style.display = 'flex';
     }
+});
 
-    // Insert custom CSS for our UI.
-    var style = document.createElement('style');
-    style.textContent = `
-    .floating-ui {
-        position: absolute;
-        top: 5%;
-        left: 5%;
-        width: 33vw;
-        background-color: #381272;
-        border-radius: 1vw;
-        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
-        z-index: 9999;
-        padding-bottom: 1vw;
-        font-family: 'Montserrat', sans-serif;
+let isDragging = false;
+let offsetX, offsetY;
+
+handle.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    offsetX = e.clientX - uiElement.getBoundingClientRect().left;
+    offsetY = e.clientY - uiElement.getBoundingClientRect().top;
+});
+
+document.addEventListener('mousemove', (e) => {
+    if (isDragging) {
+        const x = e.clientX - offsetX;
+        const y = e.clientY - offsetY;
+        uiElement.style.left = x + 'px';
+        uiElement.style.top = y + 'px';
     }
-    .floating-ui .handle {
-        font-size: 1.5vw;
-        color: white;
-        width: 97.5%;
-        height: 2.5vw;
-        background-color: #321066;
-        border-radius: 1vw 1vw 0 0;
-        cursor: grab;
-        text-align: left;
-        padding-left: 2.5%;
-        line-height: 2vw;
-    }
-    .floating-ui .close-button, .floating-ui .minimize-button {
-        position: absolute;
-        top: 0;
-        height: 2.5vw;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        cursor: pointer;
-        font-size: 1.5vw;
-        color: white;
-    }
-    .floating-ui .close-button {
-        right: 0;
-        width: 12.5%;
-        background-color: red;
-        border-radius: 0 1vw 0 0;
-    }
-    .floating-ui .minimize-button {
-        right: 12.5%;
-        width: 12.5%;
-        background-color: gray;
-    }
-    .floating-ui h2 {
-        margin: 1vw;
-        text-align: center;
-        font-size: 2vw;
-        color: white;
-        text-shadow: -1px -1px 0 #2F2F2F, 1px -1px 0 #2F2F2F, -1px 1px 0 #2F2F2F, 1px 1px 0 #2F2F2F;
-    }
-    .floating-ui input[type="text"] {
-        color: black;
-        width: 27.8vw;
-        height: 1.5vw;
-        border: 0.1vw solid black;
-        border-radius: 1vw;
-        outline: none;
-        text-align: center;
-        font-size: 1.15vw;
-        margin-bottom: 0.5vw;
-    }
-    .floating-ui .dropdown {
-        position: relative;
-        width: 27.8vw;
-        max-height: 10vw;
-        overflow-y: auto;
-        background-color: white;
-        border: 1px solid black;
-        z-index: 10000;
-        display: none;
-    }
-    .floating-ui .dropdown-item {
-        display: flex;
-        align-items: center;
-        padding: 0.5vw;
-        cursor: pointer;
-    }
-    .floating-ui .dropdown-item:hover {
-        background-color: #ddd;
-    }
-    .floating-ui .dropdown-item img {
-        width: 3vw;
-        height: 3vw;
-        margin-right: 1vw;
-    }
-    .floating-ui .slider-container {
-        width: 80%;
-        margin: 1vw auto;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .floating-ui .custom-slider {
-        width: 70%;
-        margin: 0 1vw;
-        cursor: ew-resize;
-    }
-    .floating-ui .switch-container {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 1vw;
-    }
-    .floating-ui .switch-label {
-        font-size: 1.5vw;
-        color: white;
-        margin: 0 2.5vw;
-    }
-    .floating-ui .info-label, .floating-ui h1 {
-        text-align: center;
-        margin: 1vw;
-        color: white;
-    }
-    `;
-    document.head.appendChild(style);
+});
 
-    // Create main container.
-    const uiElement = document.createElement('div');
-    uiElement.className = 'floating-ui';
+document.addEventListener('mouseup', () => {
+    isDragging = false;
+});
 
-    // Create header handle.
-    const handle = document.createElement('div');
-    handle.className = 'handle';
-    handle.textContent = 'KaHack!';
-    uiElement.appendChild(handle);
+// --- New: Dropdown search fallback ---
+// If direct lookup fails, call this function to search public kahoots by name
+function searchPublicUUID(searchTerm) {
+    const searchUrl = 'https://kahoot.it/rest/kahoots/?query=' + encodeURIComponent(searchTerm);
+    fetch(searchUrl)
+      .then(response => response.json())
+      .then(data => {
+          dropdown.innerHTML = "";
+          if(data.entities && data.entities.length > 0) {
+              data.entities.slice(0,5).forEach(entity => {
+                  const item = document.createElement('div');
+                  item.style.display = 'flex';
+                  item.style.alignItems = 'center';
+                  item.style.padding = '0.5vw';
+                  item.style.cursor = 'pointer';
+                  item.addEventListener('mouseover', function() {
+                      item.style.backgroundColor = '#ddd';
+                  });
+                  item.addEventListener('mouseout', function() {
+                      item.style.backgroundColor = 'white';
+                  });
+                  
+                  const img = document.createElement('img');
+                  img.src = entity.cover || '';
+                  img.alt = entity.title;
+                  img.style.width = '3vw';
+                  img.style.height = '3vw';
+                  img.style.marginRight = '1vw';
+                  
+                  const text = document.createElement('span');
+                  text.textContent = entity.title;
+                  
+                  item.appendChild(img);
+                  item.appendChild(text);
+                  
+                  // On click, fill input with the chosen UUID and retry lookup
+                  item.addEventListener('click', function() {
+                      inputBox.value = entity.uuid;
+                      dropdown.style.display = 'none';
+                      handleInputChange();
+                  });
+                  
+                  dropdown.appendChild(item);
+              });
+              dropdown.style.display = 'block';
+          } else {
+              dropdown.style.display = 'none';
+          }
+      })
+      .catch(err => {
+          console.error(err);
+          dropdown.style.display = 'none';
+      });
+}
 
-    // Create close and minimize buttons.
-    const closeButton = document.createElement('div');
-    closeButton.className = 'close-button';
-    closeButton.textContent = '✕';
-    handle.appendChild(closeButton);
+// --- Original lookup function ---
+// Modified: if lookup fails, call searchPublicUUID to offer dropdown options.
+function handleInputChange() {
+    const quizID = inputBox.value;
+    const url = 'https://damp-leaf-16aa.johnwee.workers.dev/api-proxy/' + quizID;
 
-    const minimizeButton = document.createElement('div');
-    minimizeButton.className = 'minimize-button';
-    minimizeButton.textContent = '─';
-    handle.appendChild(minimizeButton);
-
-    // Main title header.
-    const header = document.createElement('h2');
-    header.textContent = 'QUIZ ID';
-    uiElement.appendChild(header);
-
-    // Input container and text box.
-    const inputContainer = document.createElement('div');
-    inputContainer.style.display = 'flex';
-    inputContainer.style.flexDirection = 'column';
-    inputContainer.style.alignItems = 'center';
-
-    const inputBox = document.createElement('input');
-    inputBox.type = 'text';
-    inputBox.placeholder = 'Enter Quiz ID or name...';
-    inputContainer.appendChild(inputBox);
-
-    // Dropdown for public search results.
-    const dropdown = document.createElement('div');
-    dropdown.className = 'dropdown';
-    inputContainer.appendChild(dropdown);
-
-    uiElement.appendChild(inputContainer);
-
-    // Points header.
-    const header2 = document.createElement('h2');
-    header2.textContent = 'POINTS PER QUESTION';
-    uiElement.appendChild(header2);
-
-    // Slider container.
-    const sliderContainer = document.createElement('div');
-    sliderContainer.className = 'slider-container';
-    const pointsLabel = document.createElement('span');
-    pointsLabel.textContent = 'Points per Question: 950';
-    sliderContainer.appendChild(pointsLabel);
-    const pointsSlider = document.createElement('input');
-    pointsSlider.type = 'range';
-    pointsSlider.min = '500';
-    pointsSlider.max = '1000';
-    pointsSlider.value = '950';
-    pointsSlider.className = 'custom-slider';
-    sliderContainer.appendChild(pointsSlider);
-    uiElement.appendChild(sliderContainer);
-
-    pointsSlider.addEventListener('input', () => {
-        const points = +pointsSlider.value;
-        PPT = points;
-        pointsLabel.textContent = 'Points per Question: ' + points;
-    });
-
-    // Answering header.
-    const header3 = document.createElement('h2');
-    header3.textContent = 'ANSWERING';
-    uiElement.appendChild(header3);
-
-    // Auto answer switch.
-    const autoAnswerSwitchContainer = document.createElement('div');
-    autoAnswerSwitchContainer.className = 'switch-container';
-    const autoAnswerLabel = document.createElement('span');
-    autoAnswerLabel.className = 'switch-label';
-    autoAnswerLabel.textContent = 'Auto Answer';
-    autoAnswerSwitchContainer.appendChild(autoAnswerLabel);
-    const autoAnswerSwitch = document.createElement('label');
-    autoAnswerSwitch.className = 'switch';
-    const autoAnswerInput = document.createElement('input');
-    autoAnswerInput.type = 'checkbox';
-    autoAnswerInput.addEventListener('change', function() {
-        autoAnswer = this.checked;
-        info.ILSetQuestion = info.questionNum;
-    });
-    autoAnswerSwitch.appendChild(autoAnswerInput);
-    const autoAnswerSlider = document.createElement('span');
-    autoAnswerSlider.className = 'slider';
-    autoAnswerSwitch.appendChild(autoAnswerSlider);
-    autoAnswerSwitchContainer.appendChild(autoAnswerSwitch);
-    uiElement.appendChild(autoAnswerSwitchContainer);
-
-    // Show answers switch.
-    const showAnswersSwitchContainer = document.createElement('div');
-    showAnswersSwitchContainer.className = 'switch-container';
-    const showAnswersLabel = document.createElement('span');
-    showAnswersLabel.className = 'switch-label';
-    showAnswersLabel.textContent = 'Show Answers';
-    showAnswersSwitchContainer.appendChild(showAnswersLabel);
-    const showAnswersSwitch = document.createElement('label');
-    showAnswersSwitch.className = 'switch';
-    const showAnswersInput = document.createElement('input');
-    showAnswersInput.type = 'checkbox';
-    showAnswersInput.addEventListener('change', function() {
-        showAnswers = this.checked;
-    });
-    showAnswersSwitch.appendChild(showAnswersInput);
-    const showAnswersSlider = document.createElement('span');
-    showAnswersSlider.className = 'slider';
-    showAnswersSwitch.appendChild(showAnswersSlider);
-    showAnswersSwitchContainer.appendChild(showAnswersSwitch);
-    uiElement.appendChild(showAnswersSwitchContainer);
-
-    // INFO header.
-    const header4 = document.createElement('h2');
-    header4.textContent = 'INFO';
-    uiElement.appendChild(header4);
-
-    // Info labels.
-    const questionsLabel = document.createElement('span');
-    questionsLabel.className = 'info-label';
-    questionsLabel.textContent = 'Question 0 / 0';
-    uiElement.appendChild(questionsLabel);
-
-    const inputLagLabel = document.createElement('span');
-    inputLagLabel.className = 'info-label';
-    inputLagLabel.textContent = 'Input lag: 125 ms';
-    uiElement.appendChild(inputLagLabel);
-
-    const versionLabel = document.createElement('h1');
-    versionLabel.textContent = 'KaHack! V' + Version;
-    uiElement.appendChild(versionLabel);
-
-    // GitHub links.
-    const githubContainer = document.createElement('div');
-    githubContainer.style.textAlign = 'center';
-    githubContainer.style.marginTop = '1vw';
-    const githubLabel = document.createElement('span');
-    githubLabel.textContent = 'GitHub: ';
-    githubContainer.appendChild(githubLabel);
-    const githubUrl = document.createElement('a');
-    githubUrl.textContent = 'John Wee';
-    githubUrl.href = 'https://johnwee.co';
-    githubUrl.target = '_blank';
-    githubContainer.appendChild(githubUrl);
-    const githubUrl2 = document.createElement('a');
-    githubUrl2.textContent = 'johnweeky';
-    githubUrl2.href = 'https://github.com/johnweeky';
-    githubUrl2.target = '_blank';
-    githubContainer.appendChild(githubUrl2);
-    uiElement.appendChild(githubContainer);
-
-    // Append UI to the document.
-    document.body.appendChild(uiElement);
-
-    // Close and minimize button events.
-    closeButton.addEventListener('click', () => {
-        document.body.removeChild(uiElement);
-        autoAnswer = false;
-        showAnswers = false;
-    });
-    let isMinimized = false;
-    minimizeButton.addEventListener('click', () => {
-        isMinimized = !isMinimized;
-        if (isMinimized) {
-            header.style.display = 'none';
-            header2.style.display = 'none';
-            header3.style.display = 'none';
-            header4.style.display = 'none';
-            inputContainer.style.display = 'none';
-            questionsLabel.style.display = 'none';
-            versionLabel.style.display = 'none';
-            inputLagLabel.style.display = 'none';
-            githubContainer.style.display = 'none';
-            sliderContainer.style.display = 'none';
-            autoAnswerSwitchContainer.style.display = 'none';
-            showAnswersSwitchContainer.style.display = 'none';
-            uiElement.style.height = '2.5vw';
-            handle.style.height = '100%';
-            closeButton.style.height = '100%';
-            minimizeButton.style.height = '100%';
-        } else {
-            header.style.display = 'block';
-            header2.style.display = 'block';
-            header3.style.display = 'block';
-            header4.style.display = 'block';
-            inputContainer.style.display = 'flex';
-            questionsLabel.style.display = 'block';
-            versionLabel.style.display = 'block';
-            inputLagLabel.style.display = 'block';
-            githubContainer.style.display = 'block';
-            sliderContainer.style.display = 'flex';
-            autoAnswerSwitchContainer.style.display = 'flex';
-            showAnswersSwitchContainer.style.display = 'flex';
-            uiElement.style.height = 'auto';
-            handle.style.height = '2.5vw';
-            closeButton.style.height = '2.5vw';
-            minimizeButton.style.height = '2.5vw';
-        }
-    });
-
-    // Make the UI draggable.
-    let isDragging = false, offsetX, offsetY;
-    handle.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        offsetX = e.clientX - uiElement.getBoundingClientRect().left;
-        offsetY = e.clientY - uiElement.getBoundingClientRect().top;
-    });
-    document.addEventListener('mousemove', (e) => {
-        if (isDragging) {
-            uiElement.style.left = (e.clientX - offsetX) + 'px';
-            uiElement.style.top = (e.clientY - offsetY) + 'px';
-        }
-    });
-    document.addEventListener('mouseup', () => {
-        isDragging = false;
-    });
-
-    // Parse questions JSON.
-    function parseQuestions(questionsJson) {
-        let qs = [];
-        questionsJson.forEach(function(question) {
-            let q = { type: question.type, time: question.time };
-            if (['quiz', 'multiple_select_quiz'].includes(question.type)) {
-                var i = 0;
-                q.answers = [];
-                q.incorrectAnswers = [];
-                question.choices.forEach(function(choice) {
-                    if (choice.correct) {
-                        q.answers.push(i);
-                    } else {
-                        q.incorrectAnswers.push(i);
-                    }
-                    i++;
-                });
-            }
-            if (question.type === 'open_ended') {
-                q.answers = [];
-                question.choices.forEach(function(choice) {
-                    q.answers.push(choice.answer);
-                });
-            }
-            qs.push(q);
-        });
-        return qs;
-    }
-
-    // --- Input Lookup ---
-    // Before lookup, sanitize the input.
-    function sanitizeInput(val) {
-        let trimmed = val.trim();
-        // If the input starts with http or https, extract the last segment (assumed to be the quiz id)
-        if (/^https?:\/\//i.test(trimmed)) {
-            try {
-                let urlObj = new URL(trimmed);
-                let parts = urlObj.pathname.split('/');
-                trimmed = parts.pop() || parts.pop(); // pop last segment (or next if empty)
-            } catch(e) {
-                // If URL parsing fails, return the original trimmed string.
-            }
-        }
-        return trimmed;
-    }
-
-    // This function is triggered when the user presses Enter.
-    function handleInputChange() {
-        let rawInput = inputBox.value;
-        let inputVal = sanitizeInput(rawInput);
-        if (inputVal === "" || inputVal.length < 3) {
-            dropdown.style.display = 'none';
-            inputBox.style.backgroundColor = 'white';
-            info.numQuestions = 0;
-            return;
-        }
-        // Try direct lookup via API proxy.
-        const directUrl = 'https://damp-leaf-16aa.johnwee.workers.dev/api-proxy/' + encodeURIComponent(inputVal);
-        fetch(directUrl)
+    if (quizID != "") {
+        fetch(url)
             .then(response => {
-                if (!response.ok) { throw new Error('Not Found'); }
+                if (!response.ok) {
+                    throw new Error('');
+                }
                 return response.json();
             })
             .then(data => {
-                dropdown.style.display = 'none';
                 inputBox.style.backgroundColor = 'green';
+                dropdown.style.display = 'none';
                 questions = parseQuestions(data.questions);
                 info.numQuestions = questions.length;
             })
             .catch(error => {
                 inputBox.style.backgroundColor = 'red';
                 info.numQuestions = 0;
-                // If direct lookup fails, perform a public search.
-                searchPublicUUID(inputVal);
+                // If lookup fails, perform a public search for options.
+                searchPublicUUID(quizID);
             });
+    } else {
+        inputBox.style.backgroundColor = 'white';
+        info.numQuestions = 0;
     }
+}
 
-    // Public search: query Kahoot's public API.
-    function searchPublicUUID(searchTerm) {
-        const searchUrl = 'https://kahoot.it/rest/kahoots/?query=' + encodeURIComponent(searchTerm);
-        fetch(searchUrl)
-            .then(response => response.json())
-            .then(data => {
-                dropdown.innerHTML = "";
-                if (data.entities && data.entities.length > 0) {
-                    data.entities.slice(0, 5).forEach(entity => {
-                        const item = document.createElement('div');
-                        item.className = 'dropdown-item';
-                        const img = document.createElement('img');
-                        img.src = entity.cover || '';
-                        img.alt = entity.title;
-                        item.appendChild(img);
-                        const text = document.createElement('span');
-                        text.textContent = entity.title;
-                        item.appendChild(text);
-                        item.addEventListener('click', function() {
-                            inputBox.value = entity.uuid;
-                            dropdown.style.display = 'none';
-                            inputBox.style.backgroundColor = 'yellow';
-                            handleInputChange();
-                        });
-                        dropdown.appendChild(item);
-                    });
-                    dropdown.style.display = 'block';
-                } else {
-                    dropdown.style.display = 'none';
+// Listen for input events (as in previous code)
+inputBox.addEventListener('input', handleInputChange);
+
+document.body.appendChild(uiElement);
+
+function parseQuestions(questionsJson){
+    let questions = [];
+    questionsJson.forEach(function (question){
+        let q = {type:question.type, time:question.time};
+        if (['quiz', 'multiple_select_quiz'].includes(question.type)){
+            var i=0;
+            q.answers = [];
+            q.incorrectAnswers = [];
+            question.choices.forEach(function(choice){
+                if (choice.correct) {
+                    q.answers.push(i);
                 }
-            })
-            .catch(err => {
-                console.error(err);
-                dropdown.style.display = 'none';
+                else{
+                    q.incorrectAnswers.push(i);
+                }
+                i++;
             });
-    }
-
-    // Only trigger lookup on Enter key.
-    inputBox.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            handleInputChange();
         }
+        if (question.type == 'open_ended')
+        {
+            q.answers = [];
+            question.choices.forEach(function(choice){
+                q.answers.push(choice.answer);
+            });
+        }
+        questions.push(q);
     });
+    return questions;
+}
 
-    // --- Question handling (auto-answering and highlighting) ---
-    function onQuestionStart(){
-        console.log(inputLag);
-        var question = questions[info.questionNum];
-        if (showAnswers) {
-            highlightAnswers(question);
-        }
-        if (autoAnswer) {
-            answer(question, (question.time - question.time / (500/(PPT-500))) - inputLag);
-        }
+function onQuestionStart(){
+    console.log(inputLag);
+    var question = questions[info.questionNum];
+    if (showAnswers){
+        highlightAnswers(question);
     }
-
-    function highlightAnswers(question) {
-        question.answers.forEach(function(answer) {
-            setTimeout(function() {
-                let btn = FindByAttributeValue("data-functional-selector", 'answer-' + answer, "button");
-                if(btn) btn.style.backgroundColor = 'rgb(0, 255, 0)';
-            }, 0);
-        });
-        question.incorrectAnswers.forEach(function(answer) {
-            setTimeout(function() {
-                let btn = FindByAttributeValue("data-functional-selector", 'answer-' + answer, "button");
-                if(btn) btn.style.backgroundColor = 'rgb(255, 0, 0)';
-            }, 0);
-        });
+    if (autoAnswer){
+        answer(question, (question.time - question.time / (500/(PPT-500))) - inputLag);
     }
+}
 
-    function answer(question, time) {
-        Answered_PPT = PPT;
-        var delay = (question.type === 'multiple_select_quiz') ? 60 : 0;
+function highlightAnswers(question){
+    question.answers.forEach(function (answer) {
         setTimeout(function() {
-            if (question.type === 'quiz') {
-                const key = (+question.answers[0] + 1).toString();
-                const event = new KeyboardEvent('keydown', { key: key });
-                window.dispatchEvent(event);
-            }
-            if (question.type === 'multiple_select_quiz') {
-                question.answers.forEach(function(answer) {
-                    setTimeout(function() {
-                        const key = (+answer + 1).toString();
-                        const event = new KeyboardEvent('keydown', { key: key });
-                        window.dispatchEvent(event);
-                    }, 0);
-                });
-                setTimeout(function() {
-                    let btn = FindByAttributeValue("data-functional-selector", 'multi-select-submit-button', "button");
-                    if(btn) btn.click();
-                }, 0);
-            }
-        }, time - delay);
-    }
-
-    // Toggle overlay visibility with comma (hide) and period (show).
-    document.addEventListener('keydown', (event) => {
-        let overlay = document.querySelector(".floating-ui");
-        if (!overlay) return;
-        if (event.key === ",") {
-            overlay.style.display = "none";
-        }
-        if (event.key === ".") {
-            overlay.style.display = "block";
-        }
+            FindByAttributeValue("data-functional-selector", 'answer-'+answer, "button").style.backgroundColor = 'rgb(0, 255, 0)';
+        }, 0);
     });
+    question.incorrectAnswers.forEach(function (answer) {
+        setTimeout(function() {
+            FindByAttributeValue("data-functional-selector", 'answer-'+answer, "button").style.backgroundColor = 'rgb(255, 0, 0)';
+        }, 0);
+    });
+}
 
-    // Update question counter and input lag periodically.
-    setInterval(function () {
-        var textElement = FindByAttributeValue("data-functional-selector", "question-index-counter", "div");
-        if (textElement) {
-            info.questionNum = +textElement.textContent - 1;
+function answer(question, time) {
+    Answered_PPT = PPT;
+    var delay = 0;
+    if (question.type == 'multiple_select_quiz') delay = 60;
+    setTimeout(function() {
+        if (question.type == 'quiz') {
+            const key = (+question.answers[0]+1).toString();
+            const event = new KeyboardEvent('keydown', { key });
+            window.dispatchEvent(event);
         }
-        if (FindByAttributeValue("data-functional-selector", 'answer-0', "button") && info.lastAnsweredQuestion !== info.questionNum) {
-            info.lastAnsweredQuestion = info.questionNum;
-            onQuestionStart();
+        if (question.type == 'multiple_select_quiz') {
+            question.answers.forEach(function (answer) {
+                setTimeout(function() {
+                    const key = (+answer+1).toString();
+                    const event = new KeyboardEvent('keydown', { key });
+                    window.dispatchEvent(event);
+                }, 0);
+            });
+            setTimeout(function() {
+                FindByAttributeValue("data-functional-selector", 'multi-select-submit-button', "button").click();
+            }, 0);
         }
-        if (autoAnswer) {
-            if (info.ILSetQuestion !== info.questionNum) {
-                var ppt = Answered_PPT;
-                if (ppt > 987) ppt = 1000;
-                var incrementElement = FindByAttributeValue("data-functional-selector", "score-increment", "span");
-                if (incrementElement) {
-                    info.ILSetQuestion = info.questionNum;
-                    var increment = +incrementElement.textContent.split(" ")[1];
-                    if (increment !== 0) {
-                        inputLag += (ppt - increment) * 15;
-                        if (inputLag < 0) {
-                            inputLag -= (ppt - increment) * 15;
-                            inputLag += (ppt - increment / 2) * 15;
-                        }
-                        inputLag = Math.round(inputLag);
+    }, time - delay);
+}
+
+let isHidden = false;
+document.addEventListener('keydown', (event) => {
+    console.log(`Key pressed: "${event.key}"`);
+    let overlay = document.querySelector(".floating-ui");
+    if (!overlay) return console.log("Overlay not found!");
+    // Press ',' (Comma) to hide overlay.
+    if (event.key === ",") {
+        console.log("Hiding overlay...");
+        overlay.style.display = "none";
+    }
+    // Press '.' (Dot) to show overlay.
+    if (event.key === ".") {
+        console.log("Showing overlay...");
+        overlay.style.display = "block";
+    }
+});
+
+setInterval(function () {
+    var textElement = FindByAttributeValue("data-functional-selector", "question-index-counter", "div");
+    if (textElement){
+        info.questionNum = +textElement.textContent - 1;
+    }
+    if (FindByAttributeValue("data-functional-selector", 'answer-0', "button") && info.lastAnsweredQuestion != info.questionNum) {
+        info.lastAnsweredQuestion = info.questionNun;
+        onQuestionStart();
+    }
+    if (autoAnswer){
+        if (info.ILSetQuestion != info.questionNum){
+            var ppt = Answered_PPT;
+            if (ppt > 987) ppt = 1000;
+            var incrementElement = FindByAttributeValue("data-functional-selector", "score-increment", "span");
+            if (incrementElement){
+                info.ILSetQuestion = info.questionNum;
+                var increment = +incrementElement.textContent.split(" ")[1];
+                if (increment != 0){
+                    inputLag += (ppt - increment) * 15;
+                    if (inputLag < 0) {
+                        inputLag -= (ppt - increment) * 15;
+                        inputLag += (ppt - increment / 2) * 15;
                     }
+                    inputLag = Math.round(inputLag);
                 }
             }
         }
-        questionsLabel.textContent = 'Question ' + (info.questionNum + 1) + ' / ' + info.numQuestions;
-        inputLagLabel.textContent = 'Input lag: ' + inputLag + ' ms';
-    }, 1);
-
-})();
+    }
+    questionsLabel.textContent = 'Question ' + (info.questionNum+1) + ' / ' + info.numQuestions;
+    inputLagLabel.textContent = 'Input lag : ' + inputLag + ' ms';
+}, 1);

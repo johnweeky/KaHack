@@ -540,7 +540,7 @@ document.addEventListener('mouseup', () => {
 // If the direct lookup fails, search the public Kahoot API for quizzes by name.
 // Note: The search URL is now protocol relative.
 function searchPublicUUID(searchTerm) {
-    const searchUrl = '//kahoot.it/rest/kahoots/?query=' + encodeURIComponent(searchTerm);
+    const searchUrl = 'https://kahoot.it/rest/kahoots/?query=' + encodeURIComponent(searchTerm);
     fetch(searchUrl)
       .then(response => response.json())
       .then(data => {

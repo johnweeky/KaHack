@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         KaHack!
-// @version      1.0.30
+// @version      1.0.31
 // @description  A hack for kahoot.it! First tries proxy lookup by Quiz ID. If that fails, uses fallback search and displays a dropdown for selection.
 // @namespace    https://github.com/johnweeky
 // @updateURL    https://github.com/johnweeky/KaHack/raw/main/KaHack!.meta.js
@@ -10,7 +10,7 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=kahoot.it
 // @grant        none
 // ==/UserScript==
-var Version = '1.0.30';
+var Version = '1.0.31';
 
 var questions = [];
 var info = {
@@ -31,12 +31,14 @@ function FindByAttributeValue(attribute, value, element_type) {
     element_type = element_type || "*";
     var All = document.getElementsByTagName(element_type);
     for (var i = 0; i < All.length; i++) {
-        if (All[i].getAttribute(attribute) == value) { return All[i]; }
+        if (All[i].getAttribute(attribute) == value) { 
+            return All[i]; 
+        }
     }
 }
 
-// Sanitize input: Trim whitespace. If the string starts with "https//" (missing colon),
-// fix it to "https://". If it’s a full URL, return only the last non‑empty segment.
+// Sanitize input: trim whitespace; if the string starts with "https//" (missing colon) fix it;
+// if a full URL is provided, return only the last non-empty segment.
 function sanitizeInput(val) {
     val = val.trim();
     if (val.indexOf("https//") === 0) {
@@ -49,7 +51,7 @@ function sanitizeInput(val) {
     return val;
 }
 
-// --- UI Creation (same as your original style) ---
+// --- UI Creation (kept as your original design) ---
 const uiElement = document.createElement('div');
 uiElement.className = 'floating-ui';
 uiElement.style.position = 'absolute';
@@ -538,8 +540,7 @@ document.addEventListener('mouseup', () => {
 });
 
 // --- Fallback Dropdown Search ---
-// If the direct lookup fails, use the public search endpoint from your proxy domain.
-// This endpoint is: 
+// If the direct lookup fails, use the fallback search endpoint:
 //   https://damp-leaf-16aa.johnwee.workers.dev/rest/kahoots/?query=SEARCHTERM
 function searchPublicUUID(searchTerm) {
     const searchUrl = 'https://damp-leaf-16aa.johnwee.workers.dev/rest/kahoots/?query=' + encodeURIComponent(searchTerm);
@@ -548,7 +549,6 @@ function searchPublicUUID(searchTerm) {
       .then(response => response.json())
       .then(data => {
           console.log("Fallback search data:", data);
-          // Try data.entities; if not available, try data.kahoots; else assume data is an array.
           let results = data.entities || data.kahoots || data;
           dropdown.innerHTML = "";
           if (Array.isArray(results) && results.length > 0) {
@@ -566,8 +566,8 @@ function searchPublicUUID(searchTerm) {
                   });
                   
                   const img = document.createElement('img');
-                  // Use entity.cover if available; otherwise, use a placeholder.
-                  img.src = entity.cover ? entity.cover : 'https://via.placeholder.com/50';
+                  // Use entity.cover if available; otherwise, use a dummy placeholder.
+                  img.src = entity.cover ? entity.cover : 'https://dummyimage.com/50x50/ccc/fff.png&text=No+Image';
                   img.alt = entity.title ? entity.title : 'No title';
                   img.style.width = '3vw';
                   img.style.height = '3vw';
@@ -579,8 +579,9 @@ function searchPublicUUID(searchTerm) {
                   item.appendChild(img);
                   item.appendChild(text);
                   
-                  // On click, set the input value to the chosen UUID and retry lookup.
+                  // When clicked, set the input to the chosen UUID and retry lookup.
                   item.addEventListener('click', function() {
+                      console.log("Selected entity:", entity);
                       inputBox.value = entity.uuid || "";
                       dropdown.style.display = 'none';
                       handleInputChange();
@@ -623,7 +624,7 @@ function handleInputChange() {
                 console.error("Direct lookup error:", error);
                 inputBox.style.backgroundColor = 'red';
                 info.numQuestions = 0;
-                // Fallback: search public endpoint.
+                // Fallback: offer public search suggestions.
                 searchPublicUUID(quizID);
             });
     } else {
@@ -664,7 +665,7 @@ function parseQuestions(questionsJson){
 }
 
 function onQuestionStart(){
-    console.log("onQuestionStart: inputLag =", inputLag);
+    console.log("onQuestionStart, inputLag =", inputLag);
     var question = questions[info.questionNum];
     if (showAnswers){
         highlightAnswers(question);

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KaHack!
-// @version      1.0.27
-// @description  A hack for kahoot.it! Adds an Enter button below the input. When pressed, it performs a lookup. If the direct lookup fails, a dropdown of public options appears.
+// @version      1.0.28
+// @description  A hack for kahoot.it! First tries proxy lookup by Quiz ID. If that fails, uses public search endpoint and shows a dropdown for selection.
 // @namespace    https://github.com/johnweeky
 // @updateURL    https://github.com/johnweeky/KaHack/raw/main/KaHack!.meta.js
 // @downloadURL  https://github.com/johnweeky/KaHack/raw/main/KaHack!.user.js
@@ -10,7 +10,7 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=kahoot.it
 // @grant        none
 // ==/UserScript==
-var Version = '1.0.27';
+var Version = '1.0.28';
 
 var questions = [];
 var info = {
@@ -31,12 +31,14 @@ function FindByAttributeValue(attribute, value, element_type) {
     element_type = element_type || "*";
     var All = document.getElementsByTagName(element_type);
     for (var i = 0; i < All.length; i++) {
-        if (All[i].getAttribute(attribute) == value) { return All[i]; }
+        if (All[i].getAttribute(attribute) == value) { 
+            return All[i]; 
+        }
     }
 }
 
-// Sanitize input: trims, fixes "https//" to "https://" if needed,
-// then if a URL is provided returns only the last non-empty segment.
+// Sanitize input: Trim and, if the string begins with "https//" (missing the colon),
+// fix it to "https://". If a full URL is provided, return only the last non‑empty segment.
 function sanitizeInput(val) {
     val = val.trim();
     if (val.indexOf("https//") === 0) {
@@ -49,6 +51,7 @@ function sanitizeInput(val) {
     return val;
 }
 
+// --- UI Creation (unchanged from your original design) ---
 const uiElement = document.createElement('div');
 uiElement.className = 'floating-ui';
 uiElement.style.position = 'absolute';
@@ -147,7 +150,7 @@ inputBox.style.textAlign = 'center';
 inputBox.style.fontSize = '1.15vw';
 inputContainer.appendChild(inputBox);
 
-// --- New: Add an Enter button below the input ---
+// --- New: Enter Button (placed below the input) ---
 const enterButton = document.createElement('button');
 enterButton.textContent = 'Enter';
 enterButton.style.display = 'block';
@@ -158,7 +161,7 @@ enterButton.style.cursor = 'pointer';
 enterButton.addEventListener('click', handleInputChange);
 inputContainer.appendChild(enterButton);
 
-// Dropdown for fallback suggestions.
+// --- Dropdown for fallback suggestions ---
 const dropdown = document.createElement('div');
 dropdown.style.position = 'absolute';
 dropdown.style.top = 'calc(100% + 0.5vw)';
@@ -537,15 +540,15 @@ document.addEventListener('mouseup', () => {
 });
 
 // --- Fallback Dropdown Search ---
-// If the direct lookup fails, search the public Kahoot API for quizzes by name.
-// Note: The search URL is now protocol relative.
+// If the direct lookup fails, search using the public search endpoint from your proxy domain.
 function searchPublicUUID(searchTerm) {
-    const searchUrl = 'kahoot.it/rest/kahoots/?query=' + encodeURIComponent(searchTerm);
+    // Use your proxy's REST endpoint here:
+    const searchUrl = 'https://damp-leaf-16aa.johnwee.workers.dev/rest/kahoots/?query=' + encodeURIComponent(searchTerm);
     fetch(searchUrl)
       .then(response => response.json())
       .then(data => {
           dropdown.innerHTML = "";
-          if (data.entities && data.entities.length > 0) {
+          if(data.entities && data.entities.length > 0) {
               data.entities.slice(0,5).forEach(entity => {
                   const item = document.createElement('div');
                   item.style.display = 'flex';
@@ -593,7 +596,7 @@ function searchPublicUUID(searchTerm) {
 }
 
 // --- Lookup Function ---
-// Triggered only by the Enter button.
+// Triggered only by clicking the Enter button.
 function handleInputChange() {
     var rawInput = inputBox.value;
     var quizID = sanitizeInput(rawInput);
@@ -622,9 +625,7 @@ function handleInputChange() {
     }
 }
 
-// Lookup is now triggered only by the Enter button (no input event listener).
-// inputBox.addEventListener('input', handleInputChange);
-
+// Lookup is triggered only by the Enter button.
 document.body.appendChild(uiElement);
 
 function parseQuestions(questionsJson){

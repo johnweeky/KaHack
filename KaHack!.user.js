@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KaHack!
 // @version      1.0.26
-// @description  A hack for kahoot.it! (If direct quiz lookup fails, a dropdown of a few public options will appear.)
+// @description  A hack for kahoot.it! Adds an Enter button below the input. If direct lookup fails, a dropdown of public options appears.
 // @namespace    https://github.com/johnweeky
 // @updateURL    https://github.com/johnweeky/KaHack/raw/main/KaHack!.meta.js
 // @downloadURL  https://github.com/johnweeky/KaHack/raw/main/KaHack!.user.js
@@ -17,8 +17,8 @@ var info = {
     numQuestions: 0,
     questionNum: -1,
     lastAnsweredQuestion: -1,
-    defaultIL:true,
-    ILSetQuestion:-1,
+    defaultIL: true,
+    ILSetQuestion: -1,
 };
 var PPT = 950;
 var Answered_PPT = 950;
@@ -32,6 +32,18 @@ function FindByAttributeValue(attribute, value, element_type) {
   for (var i = 0; i < All.length; i++) {
     if (All[i].getAttribute(attribute) == value) { return All[i]; }
   }
+}
+
+// --- Sanitize input ---
+// If the user pastes a URL or a string with "https://" or "http://", this function extracts only the last segment.
+function sanitizeInput(val) {
+    val = val.trim();
+    if (/^https?:\/\//i.test(val)) {
+        // Remove protocol and split on slashes; use the last non-empty segment.
+        var parts = val.replace(/^https?:\/\//i, '').split('/');
+        return parts.filter(Boolean).pop();
+    }
+    return val;
 }
 
 const uiElement = document.createElement('div');
@@ -48,7 +60,7 @@ uiElement.style.zIndex = '9999';
 
 const handle = document.createElement('div');
 handle.className = 'handle';
-handle.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif;';
+handle.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
 handle.style.fontSize = '1.5vw';
 handle.textContent = 'KaHack!';
 handle.style.color = 'white';
@@ -101,7 +113,7 @@ header.textContent = 'QUIZ ID';
 header.style.display = 'block';
 header.style.margin = '1vw';
 header.style.textAlign = 'center';
-header.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif;';
+header.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
 header.style.fontSize = '2vw';
 header.style.color = 'white';
 header.style.textShadow = `
@@ -131,7 +143,16 @@ inputBox.style.textAlign = 'center';
 inputBox.style.fontSize = '1.15vw';
 inputContainer.appendChild(inputBox);
 
-// --- Added dropdown element for public search options ---
+// Add an "Enter" button below the input
+const enterButton = document.createElement('button');
+enterButton.textContent = 'Enter';
+enterButton.style.marginTop = '0.5vw';
+enterButton.style.fontSize = '1.15vw';
+enterButton.style.cursor = 'pointer';
+enterButton.addEventListener('click', handleInputChange);
+inputContainer.appendChild(enterButton);
+
+// Create dropdown for fallback suggestions
 const dropdown = document.createElement('div');
 dropdown.style.position = 'absolute';
 dropdown.style.top = 'calc(100% + 0.5vw)';
@@ -142,7 +163,6 @@ dropdown.style.borderRadius = '0.5vw';
 dropdown.style.zIndex = '10000';
 dropdown.style.display = 'none';
 inputContainer.appendChild(dropdown);
-// --- end dropdown ---
 
 uiElement.appendChild(inputContainer);
 
@@ -151,7 +171,7 @@ header2.textContent = 'POINTS PER QUESTION';
 header2.style.display = 'block';
 header2.style.margin = '1vw';
 header2.style.textAlign = 'center';
-header2.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif;';
+header2.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
 header2.style.fontSize = '2vw';
 header2.style.color = 'white';
 header2.style.textShadow = `
@@ -171,7 +191,7 @@ sliderContainer.style.justifyContent = 'center';
 
 const pointsLabel = document.createElement('span');
 pointsLabel.textContent = 'Points per Question: 950';
-pointsLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif;';
+pointsLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
 pointsLabel.style.fontSize = '1.5vw';
 pointsLabel.style.margin = '1vw';
 pointsLabel.style.marginLeft = '1vw';
@@ -206,7 +226,7 @@ header3.textContent = 'ANSWERING';
 header3.style.display = 'block';
 header3.style.margin = '1vw';
 header3.style.textAlign = 'center';
-header3.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif;';
+header3.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
 header3.style.fontSize = '2vw';
 header3.style.color = 'white';
 header3.style.textShadow = `
@@ -227,7 +247,7 @@ uiElement.appendChild(autoAnswerSwitchContainer);
 const autoAnswerLabel = document.createElement('span');
 autoAnswerLabel.textContent = 'Auto Answer';
 autoAnswerLabel.className = 'switch-label';
-autoAnswerLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif;';
+autoAnswerLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
 autoAnswerLabel.style.fontSize = '1.5vw';
 autoAnswerLabel.style.color = 'white';
 autoAnswerLabel.style.margin = '2.5vw';
@@ -259,7 +279,7 @@ uiElement.appendChild(showAnswersSwitchContainer);
 const showAnswersLabel = document.createElement('span');
 showAnswersLabel.textContent = 'Show Answers';
 showAnswersLabel.className = 'switch-label';
-showAnswersLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif;';
+showAnswersLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
 showAnswersLabel.style.fontSize = '1.5vw';
 showAnswersLabel.style.color = 'white';
 showAnswersLabel.style.margin = '2.5vw';
@@ -290,7 +310,6 @@ style.textContent = `
     appearance: none; /* Remove default appearance */
     height: 0; /* Set the height to match the thumb height */
 }
-
 .custom-slider::-webkit-slider-thumb {
     appearance: none; /* Remove default appearance */
     width: 1.75vw; /* Set width of the slider handle */
@@ -300,7 +319,6 @@ style.textContent = `
     cursor: ew-resize; /* Horizontal resize cursor */
     margin-top: -0.5vw; /* Adjust margin-top to vertically center the thumb */
 }
-
 .custom-slider::-webkit-slider-runnable-track {
     width: 100%; /* Set track width to 100% */
     height: 0.75vw; /* Set track height to match the thumb height */
@@ -309,14 +327,12 @@ style.textContent = `
     border-radius: 1vw; /* Set rounded corners for the track */
     background: linear-gradient(to right, red, yellow, limegreen); /* Gradient */
 }
-
 :root {
   --switch-width: 5.9vw;
   --switch-height: 3.3vw;
   --slider-size: 2.5vw;
   --slider-thumb-size: 1.3vw;
 }
-
 .switch {
   position: relative;
   display: inline-block;
@@ -324,13 +340,11 @@ style.textContent = `
   height: var(--switch-height);
   margin: 2.5vw;
 }
-
 .switch input {
   opacity: 0;
   width: 0;
   height: 0;
 }
-
 .slider {
   position: absolute;
   cursor: pointer;
@@ -342,7 +356,6 @@ style.textContent = `
   transition: 0.8s;
   border-radius: .5vw;
 }
-
 .slider:before {
   position: absolute;
   content: "";
@@ -354,15 +367,12 @@ style.textContent = `
   transition: 0.8s;
   border-radius: .5vw;
 }
-
 input:checked + .slider {
   background-color: green;
 }
-
 input:focus + .slider {
   box-shadow: 0 0 1px green;
 }
-
 input:checked + .slider:before {
   transform: translateX(calc(var(--slider-size)));
 }
@@ -374,7 +384,7 @@ header4.textContent = 'INFO';
 header4.style.display = 'block';
 header4.style.margin = '1vw';
 header4.style.textAlign = 'center';
-header4.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif;';
+header4.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
 header4.style.fontSize = '2vw';
 header4.style.color = 'white';
 header4.style.textShadow = `
@@ -388,7 +398,7 @@ uiElement.appendChild(header4);
 const questionsLabel = document.createElement('span');
 questionsLabel.textContent = 'Question 0 / 0';
 questionsLabel.style.display = 'block';
-questionsLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif;';
+questionsLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
 questionsLabel.style.fontSize = '1.5vw';
 questionsLabel.style.textAlign = 'center';
 questionsLabel.style.margin = '1vw';
@@ -400,7 +410,7 @@ uiElement.appendChild(questionsLabel);
 const inputLagLabel = document.createElement('span');
 inputLagLabel.textContent = 'Input lag : 125 ms';
 inputLagLabel.style.display = 'block';
-inputLagLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif;';
+inputLagLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
 inputLagLabel.style.fontSize = '1.5vw';
 inputLagLabel.style.textAlign = 'center';
 inputLagLabel.style.margin = '1vw';
@@ -411,7 +421,7 @@ uiElement.appendChild(inputLagLabel);
 
 const versionLabel = document.createElement('h1');
 versionLabel.textContent = 'KaHack! V'+Version;
-versionLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif;';
+versionLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
 versionLabel.style.fontSize = '2.5vw';
 versionLabel.style.display = 'block';
 versionLabel.style.textAlign = 'center';
@@ -427,7 +437,7 @@ githubContainer.style.marginTop = '1vw';
 
 const githubLabel = document.createElement('span');
 githubLabel.textContent = 'GitHub: ';
-githubLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif;';
+githubLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
 githubLabel.style.fontSize = '1.5vw';
 githubLabel.style.margin = '0 1vw';
 githubLabel.style.color = 'white';
@@ -437,7 +447,7 @@ const githubUrl = document.createElement('a');
 githubUrl.textContent = 'John Wee';
 githubUrl.href = 'https://johnwee.co';
 githubUrl.target = '_blank';
-githubUrl.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif;';
+githubUrl.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
 githubUrl.style.fontSize = '1.5vw';
 githubUrl.style.margin = '0 1vw';
 githubUrl.style.color = 'white';
@@ -447,7 +457,7 @@ const githubUrl2 = document.createElement('a');
 githubUrl2.textContent = 'johnweeky';
 githubUrl2.href = 'https://github.com/johnweeky';
 githubUrl2.target = '_blank';
-githubUrl2.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif;';
+githubUrl2.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
 githubUrl2.style.fontSize = '1.5vw';
 githubUrl2.style.margin = '0 1vw';
 githubUrl2.style.color = 'white';
@@ -520,7 +530,6 @@ document.addEventListener('mousemove', (e) => {
     if (isDragging) {
         const x = e.clientX - offsetX;
         const y = e.clientY - offsetY;
-
         uiElement.style.left = x + 'px';
         uiElement.style.top = y + 'px';
     }
@@ -530,8 +539,8 @@ document.addEventListener('mouseup', () => {
     isDragging = false;
 });
 
-// --- New: Dropdown fallback ---
-// If direct lookup fails, search public API for quizzes by name
+// --- Fallback Dropdown Search ---
+// If direct lookup fails, search the public Kahoot API for quizzes by name.
 function searchPublicUUID(searchTerm) {
     const searchUrl = 'https://kahoot.it/rest/kahoots/?query=' + encodeURIComponent(searchTerm);
     fetch(searchUrl)
@@ -565,7 +574,7 @@ function searchPublicUUID(searchTerm) {
                   item.appendChild(img);
                   item.appendChild(text);
                   
-                  // When clicked, fill input with the chosen UUID and try lookup
+                  // When clicked, fill the input with the chosen UUID and try lookup.
                   item.addEventListener('click', function() {
                       inputBox.value = entity.uuid;
                       dropdown.style.display = 'none';
@@ -585,13 +594,16 @@ function searchPublicUUID(searchTerm) {
       });
 }
 
-// --- Original lookup function ---
-// If lookup fails, call searchPublicUUID to provide dropdown suggestions.
+// --- Lookup Function ---
+// It now encodes the input value (after sanitization) to ensure a valid URL.
+// If the direct lookup fails, it calls searchPublicUUID() to offer dropdown suggestions.
 function handleInputChange() {
-    const quizID = inputBox.value;
-    const url = 'https://damp-leaf-16aa.johnwee.workers.dev/api-proxy/' + quizID;
+    var rawInput = inputBox.value;
+    var quizID = sanitizeInput(rawInput);
+    // Use encodeURIComponent when building the URL.
+    const url = 'https://damp-leaf-16aa.johnwee.workers.dev/api-proxy/' + encodeURIComponent(quizID);
 
-    if (quizID != "") {
+    if (quizID !== "") {
         fetch(url)
             .then(response => {
                 if (!response.ok) {
@@ -608,7 +620,7 @@ function handleInputChange() {
             .catch(error => {
                 inputBox.style.backgroundColor = 'red';
                 info.numQuestions = 0;
-                // Fallback: offer public search suggestions
+                // If lookup fails, use public search to offer options.
                 searchPublicUUID(quizID);
             });
     } else {
@@ -624,23 +636,21 @@ document.body.appendChild(uiElement);
 function parseQuestions(questionsJson){
     let questions = [];
     questionsJson.forEach(function (question){
-        let q = {type:question.type, time:question.time};
+        let q = {type: question.type, time: question.time};
         if (['quiz', 'multiple_select_quiz'].includes(question.type)){
-            var i=0;
+            var i = 0;
             q.answers = [];
             q.incorrectAnswers = [];
             question.choices.forEach(function(choice){
                 if (choice.correct) {
                     q.answers.push(i);
-                }
-                else{
+                } else {
                     q.incorrectAnswers.push(i);
                 }
                 i++;
             });
         }
-        if (question.type == 'open_ended')
-        {
+        if (question.type == 'open_ended') {
             q.answers = [];
             question.choices.forEach(function(choice){
                 q.answers.push(choice.answer);
@@ -663,39 +673,38 @@ function onQuestionStart(){
 }
 
 function highlightAnswers(question){
-    question.answers.forEach(function (answer) {
+    question.answers.forEach(function(answer) {
         setTimeout(function() {
-            FindByAttributeValue("data-functional-selector", 'answer-'+answer, "button").style.backgroundColor = 'rgb(0, 255, 0)';
+            FindByAttributeValue("data-functional-selector", 'answer-' + answer, "button").style.backgroundColor = 'rgb(0, 255, 0)';
         }, 0);
     });
-    question.incorrectAnswers.forEach(function (answer) {
+    question.incorrectAnswers.forEach(function(answer) {
         setTimeout(function() {
-            FindByAttributeValue("data-functional-selector", 'answer-'+answer, "button").style.backgroundColor = 'rgb(255, 0, 0)';
+            FindByAttributeValue("data-functional-selector", 'answer-' + answer, "button").style.backgroundColor = 'rgb(255, 0, 0)';
         }, 0);
     });
 }
 
 function answer(question, time) {
     Answered_PPT = PPT;
-    
     var delay = 0;
     if (question.type == 'multiple_select_quiz') delay = 60;
     setTimeout(function() {
         if (question.type == 'quiz') {
-            const key = (+question.answers[0]+1).toString();
-            const event = new KeyboardEvent('keydown', { key });
+            const key = (+question.answers[0] + 1).toString();
+            const event = new KeyboardEvent('keydown', { key: key });
             window.dispatchEvent(event);
         }
         if (question.type == 'multiple_select_quiz') {
-            question.answers.forEach(function (answer) {
+            question.answers.forEach(function(answer) {
                 setTimeout(function() {
-                    const key = (+answer+1).toString();
-                    const event = new KeyboardEvent('keydown', { key });
+                    const key = (+answer + 1).toString();
+                    const event = new KeyboardEvent('keydown', { key: key });
                     window.dispatchEvent(event);
                 }, 0);
             });
             setTimeout(function() {
-               FindByAttributeValue("data-functional-selector", 'multi-select-submit-button', "button").click();
+                FindByAttributeValue("data-functional-selector", 'multi-select-submit-button', "button").click();
             }, 0);
         }
     }, time - delay);
@@ -706,12 +715,12 @@ document.addEventListener('keydown', (event) => {
     console.log(`Key pressed: "${event.key}"`);
     let overlay = document.querySelector(".floating-ui");
     if (!overlay) return console.log("Overlay not found!");
-    // Press ',' (Comma) to hide overlay.
+    // Press ',' (Comma) to hide the overlay.
     if (event.key === ",") {
         console.log("Hiding overlay...");
         overlay.style.display = "none";
     }
-    // Press '.' (Dot) to show overlay.
+    // Press '.' (Dot) to show the overlay.
     if (event.key === ".") {
         console.log("Showing overlay...");
         overlay.style.display = "block";
@@ -724,7 +733,7 @@ setInterval(function () {
         info.questionNum = +textElement.textContent - 1;
     }
     if (FindByAttributeValue("data-functional-selector", 'answer-0', "button") && info.lastAnsweredQuestion != info.questionNum) {
-        info.lastAnsweredQuestion = info.questionNun;
+        info.lastAnsweredQuestion = info.questionNum;
         onQuestionStart();
     }
     if (autoAnswer){
@@ -736,16 +745,16 @@ setInterval(function () {
                 info.ILSetQuestion = info.questionNum;
                 var increment = +incrementElement.textContent.split(" ")[1];
                 if (increment != 0){
-                    inputLag += (ppt-increment)*15;
+                    inputLag += (ppt - increment) * 15;
                     if (inputLag < 0) {
-                        inputLag -= (ppt-increment)*15;
-                        inputLag += (ppt-increment/2)*15;
+                        inputLag -= (ppt - increment) * 15;
+                        inputLag += (ppt - increment/2) * 15;
                     }
                     inputLag = Math.round(inputLag);
                 }
             }
         }
     }
-    questionsLabel.textContent = 'Question '+(info.questionNum+1)+' / '+info.numQuestions;
-    inputLagLabel.textContent = 'Input lag : '+inputLag+' ms';
+    questionsLabel.textContent = 'Question ' + (info.questionNum + 1) + ' / ' + info.numQuestions;
+    inputLagLabel.textContent = 'Input lag : ' + inputLag + ' ms';
 }, 1);

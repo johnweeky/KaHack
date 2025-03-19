@@ -29,18 +29,18 @@
     var showAnswers = false;
     var inputLag = 100;
 
-    // Helper to find an element by attribute value.
+    // Helper: find element by attribute value.
     function FindByAttributeValue(attribute, value, element_type) {
         element_type = element_type || "*";
         var All = document.getElementsByTagName(element_type);
         for (var i = 0; i < All.length; i++) {
-            if (All[i].getAttribute(attribute) === value) { 
-                return All[i]; 
+            if (All[i].getAttribute(attribute) === value) {
+                return All[i];
             }
         }
     }
 
-    // Create a style element for our custom CSS.
+    // Insert custom CSS for our UI.
     var style = document.createElement('style');
     style.textContent = `
     .floating-ui {
@@ -162,11 +162,11 @@
     `;
     document.head.appendChild(style);
 
-    // Create main container element.
+    // Create main container.
     const uiElement = document.createElement('div');
     uiElement.className = 'floating-ui';
 
-    // Create and append header handle.
+    // Create header handle.
     const handle = document.createElement('div');
     handle.className = 'handle';
     handle.textContent = 'KaHack!';
@@ -183,31 +183,30 @@
     minimizeButton.textContent = '─';
     handle.appendChild(minimizeButton);
 
-    // Title header.
+    // Main title header.
     const header = document.createElement('h2');
     header.textContent = 'QUIZ ID';
     uiElement.appendChild(header);
 
-    // Create input container.
+    // Input container and text box.
     const inputContainer = document.createElement('div');
     inputContainer.style.display = 'flex';
     inputContainer.style.flexDirection = 'column';
     inputContainer.style.alignItems = 'center';
 
-    // Input box.
     const inputBox = document.createElement('input');
     inputBox.type = 'text';
     inputBox.placeholder = 'Enter Quiz ID or name...';
     inputContainer.appendChild(inputBox);
 
-    // Dropdown container.
+    // Dropdown for public search results.
     const dropdown = document.createElement('div');
     dropdown.className = 'dropdown';
     inputContainer.appendChild(dropdown);
 
     uiElement.appendChild(inputContainer);
 
-    // Points per question header.
+    // Points header.
     const header2 = document.createElement('h2');
     header2.textContent = 'POINTS PER QUESTION';
     uiElement.appendChild(header2);
@@ -238,7 +237,7 @@
     header3.textContent = 'ANSWERING';
     uiElement.appendChild(header3);
 
-    // Switch containers for auto answer and show answers.
+    // Auto answer switch.
     const autoAnswerSwitchContainer = document.createElement('div');
     autoAnswerSwitchContainer.className = 'switch-container';
     const autoAnswerLabel = document.createElement('span');
@@ -260,6 +259,7 @@
     autoAnswerSwitchContainer.appendChild(autoAnswerSwitch);
     uiElement.appendChild(autoAnswerSwitchContainer);
 
+    // Show answers switch.
     const showAnswersSwitchContainer = document.createElement('div');
     showAnswersSwitchContainer.className = 'switch-container';
     const showAnswersLabel = document.createElement('span');
@@ -319,10 +319,10 @@
     githubContainer.appendChild(githubUrl2);
     uiElement.appendChild(githubContainer);
 
-    // Append the UI to the document.
+    // Append UI to the document.
     document.body.appendChild(uiElement);
 
-    // Close and minimize functionality.
+    // Close and minimize button events.
     closeButton.addEventListener('click', () => {
         document.body.removeChild(uiElement);
         autoAnswer = false;
@@ -368,7 +368,7 @@
         }
     });
 
-    // Draggable UI.
+    // Make the UI draggable.
     let isDragging = false, offsetX, offsetY;
     handle.addEventListener('mousedown', (e) => {
         isDragging = true;
@@ -414,18 +414,36 @@
         return qs;
     }
 
-    // The lookup function. It is only triggered when the user presses Enter.
+    // --- Input Lookup ---
+    // Before lookup, sanitize the input.
+    function sanitizeInput(val) {
+        let trimmed = val.trim();
+        // If the input starts with http or https, extract the last segment (assumed to be the quiz id)
+        if (/^https?:\/\//i.test(trimmed)) {
+            try {
+                let urlObj = new URL(trimmed);
+                let parts = urlObj.pathname.split('/');
+                trimmed = parts.pop() || parts.pop(); // pop last segment (or next if empty)
+            } catch(e) {
+                // If URL parsing fails, return the original trimmed string.
+            }
+        }
+        return trimmed;
+    }
+
+    // This function is triggered when the user presses Enter.
     function handleInputChange() {
-        const inputVal = inputBox.value.trim();
+        let rawInput = inputBox.value;
+        let inputVal = sanitizeInput(rawInput);
         if (inputVal === "" || inputVal.length < 3) {
             dropdown.style.display = 'none';
             inputBox.style.backgroundColor = 'white';
             info.numQuestions = 0;
             return;
         }
-        // First, try direct lookup via API proxy.
-        const url = 'https://damp-leaf-16aa.johnwee.workers.dev/api-proxy/' + encodeURIComponent(inputVal);
-        fetch(url)
+        // Try direct lookup via API proxy.
+        const directUrl = 'https://damp-leaf-16aa.johnwee.workers.dev/api-proxy/' + encodeURIComponent(inputVal);
+        fetch(directUrl)
             .then(response => {
                 if (!response.ok) { throw new Error('Not Found'); }
                 return response.json();
@@ -439,12 +457,12 @@
             .catch(error => {
                 inputBox.style.backgroundColor = 'red';
                 info.numQuestions = 0;
-                // If direct lookup fails, use public search.
+                // If direct lookup fails, perform a public search.
                 searchPublicUUID(inputVal);
             });
     }
 
-    // Public search function.
+    // Public search: query Kahoot's public API.
     function searchPublicUUID(searchTerm) {
         const searchUrl = 'https://kahoot.it/rest/kahoots/?query=' + encodeURIComponent(searchTerm);
         fetch(searchUrl)
@@ -481,14 +499,14 @@
             });
     }
 
-    // Listen for Enter key on the input box.
+    // Only trigger lookup on Enter key.
     inputBox.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
             handleInputChange();
         }
     });
 
-    // Functions for handling question events.
+    // --- Question handling (auto-answering and highlighting) ---
     function onQuestionStart(){
         console.log(inputLag);
         var question = questions[info.questionNum];
@@ -552,7 +570,7 @@
         }
     });
 
-    // Periodically update question counter and adjust input lag.
+    // Update question counter and input lag periodically.
     setInterval(function () {
         var textElement = FindByAttributeValue("data-functional-selector", "question-index-counter", "div");
         if (textElement) {

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KaHack!
-// @version      1.0.28
-// @description  A hack for kahoot.it! First tries proxy lookup by Quiz ID. If that fails, uses public search endpoint and shows a dropdown for selection.
+// @version      1.0.29
+// @description  A hack for kahoot.it! It first tries a proxy lookup by Quiz ID. If that fails, it uses a fallback search endpoint and shows a dropdown for selection.
 // @namespace    https://github.com/johnweeky
 // @updateURL    https://github.com/johnweeky/KaHack/raw/main/KaHack!.meta.js
 // @downloadURL  https://github.com/johnweeky/KaHack/raw/main/KaHack!.user.js
@@ -10,7 +10,7 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=kahoot.it
 // @grant        none
 // ==/UserScript==
-var Version = '1.0.28';
+var Version = '1.0.29';
 
 var questions = [];
 var info = {
@@ -31,14 +31,12 @@ function FindByAttributeValue(attribute, value, element_type) {
     element_type = element_type || "*";
     var All = document.getElementsByTagName(element_type);
     for (var i = 0; i < All.length; i++) {
-        if (All[i].getAttribute(attribute) == value) { 
-            return All[i]; 
-        }
+        if (All[i].getAttribute(attribute) == value) { return All[i]; }
     }
 }
 
-// Sanitize input: Trim and, if the string begins with "https//" (missing the colon),
-// fix it to "https://". If a full URL is provided, return only the last non‑empty segment.
+// Sanitize input: Trim whitespace; if the value begins with "https//", fix it to "https://"
+// and if a full URL is provided, return only its last non-empty segment.
 function sanitizeInput(val) {
     val = val.trim();
     if (val.indexOf("https//") === 0) {
@@ -150,7 +148,7 @@ inputBox.style.textAlign = 'center';
 inputBox.style.fontSize = '1.15vw';
 inputContainer.appendChild(inputBox);
 
-// --- New: Enter Button (placed below the input) ---
+// --- New: Enter button below the input ---
 const enterButton = document.createElement('button');
 enterButton.textContent = 'Enter';
 enterButton.style.display = 'block';
@@ -542,14 +540,15 @@ document.addEventListener('mouseup', () => {
 // --- Fallback Dropdown Search ---
 // If the direct lookup fails, search using the public search endpoint from your proxy domain.
 function searchPublicUUID(searchTerm) {
-    // Use your proxy's REST endpoint here:
     const searchUrl = 'https://damp-leaf-16aa.johnwee.workers.dev/rest/kahoots/?query=' + encodeURIComponent(searchTerm);
     fetch(searchUrl)
       .then(response => response.json())
       .then(data => {
+          // Try to get results from data.entities; if not, assume data is the array.
+          let results = data.entities || data;
           dropdown.innerHTML = "";
-          if(data.entities && data.entities.length > 0) {
-              data.entities.slice(0,5).forEach(entity => {
+          if (Array.isArray(results) && results.length > 0) {
+              results.slice(0,5).forEach(entity => {
                   const item = document.createElement('div');
                   item.style.display = 'flex';
                   item.style.alignItems = 'center';
@@ -563,21 +562,22 @@ function searchPublicUUID(searchTerm) {
                   });
                   
                   const img = document.createElement('img');
-                  img.src = entity.cover || '';
-                  img.alt = entity.title;
+                  // Use entity.cover if available; otherwise, use a placeholder image.
+                  img.src = entity.cover ? entity.cover : 'https://via.placeholder.com/50';
+                  img.alt = entity.title ? entity.title : 'No title';
                   img.style.width = '3vw';
                   img.style.height = '3vw';
                   img.style.marginRight = '1vw';
                   
                   const text = document.createElement('span');
-                  text.textContent = entity.title;
+                  text.textContent = entity.title || "No title";
                   
                   item.appendChild(img);
                   item.appendChild(text);
                   
-                  // When clicked, fill the input with the chosen UUID and retry lookup.
+                  // When clicked, set the input to the chosen UUID and retry lookup.
                   item.addEventListener('click', function() {
-                      inputBox.value = entity.uuid;
+                      inputBox.value = entity.uuid || "";
                       dropdown.style.display = 'none';
                       handleInputChange();
                   });
@@ -625,7 +625,7 @@ function handleInputChange() {
     }
 }
 
-// Lookup is triggered only by the Enter button.
+// Lookup is triggered only by clicking the Enter button.
 document.body.appendChild(uiElement);
 
 function parseQuestions(questionsJson){

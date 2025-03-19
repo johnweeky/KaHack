@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KaHack!
 // @version      1.0.26
-// @description  A hack for kahoot.it! Adds an Enter button below the input. When pressed, it performs a lookup. If direct lookup fails, a dropdown of public options appears.
+// @description  A hack for kahoot.it! Adds an Enter button below the input. When pressed, it performs a lookup. If the direct lookup fails, a dropdown of public options appears.
 // @namespace    https://github.com/johnweeky
 // @updateURL    https://github.com/johnweeky/KaHack/raw/main/KaHack!.meta.js
 // @downloadURL  https://github.com/johnweeky/KaHack/raw/main/KaHack!.user.js
@@ -35,8 +35,8 @@ function FindByAttributeValue(attribute, value, element_type) {
     }
 }
 
-// Sanitize input: trims and, if the string begins with "https//" (missing colon),
-// fixes it to "https://" then returns only the last segment if a URL was provided.
+// Sanitize input: Trim and if the string begins with "https//" (missing colon),
+// fix it to "https://". Then, if a URL is provided, return only the last non-empty segment.
 function sanitizeInput(val) {
     val = val.trim();
     if (val.indexOf("https//") === 0) {
@@ -49,7 +49,7 @@ function sanitizeInput(val) {
     return val;
 }
 
-// --- UI Creation (unchanged from your original style) ---
+// --- UI Creation (kept as in your original code) ---
 const uiElement = document.createElement('div');
 uiElement.className = 'floating-ui';
 uiElement.style.position = 'absolute';
@@ -148,7 +148,7 @@ inputBox.style.textAlign = 'center';
 inputBox.style.fontSize = '1.15vw';
 inputContainer.appendChild(inputBox);
 
-// Add an Enter button below the input (displayed as block)
+// --- New: Add an Enter button under the input ---
 const enterButton = document.createElement('button');
 enterButton.textContent = 'Enter';
 enterButton.style.display = 'block';
@@ -159,7 +159,7 @@ enterButton.style.cursor = 'pointer';
 enterButton.addEventListener('click', handleInputChange);
 inputContainer.appendChild(enterButton);
 
-// Dropdown for public search suggestions.
+// Dropdown for fallback suggestions.
 const dropdown = document.createElement('div');
 dropdown.style.position = 'absolute';
 dropdown.style.top = 'calc(100% + 0.5vw)';
@@ -479,6 +479,7 @@ closeButton.addEventListener('click', () => {
 });
 
 let isMinimized = false;
+
 minimizeButton.addEventListener('click', () => {
     isMinimized = !isMinimized;
     if (isMinimized) {
@@ -538,14 +539,14 @@ document.addEventListener('mouseup', () => {
 });
 
 // --- Fallback Dropdown Search ---
-// If direct lookup fails, search the public Kahoot API for quizzes by name.
+// If the direct lookup fails, search the public Kahoot API for quizzes by name.
 function searchPublicUUID(searchTerm) {
     const searchUrl = 'https://kahoot.it/rest/kahoots/?query=' + encodeURIComponent(searchTerm);
     fetch(searchUrl)
       .then(response => response.json())
       .then(data => {
           dropdown.innerHTML = "";
-          if(data.entities && data.entities.length > 0) {
+          if (data.entities && data.entities.length > 0) {
               data.entities.slice(0,5).forEach(entity => {
                   const item = document.createElement('div');
                   item.style.display = 'flex';
@@ -572,7 +573,7 @@ function searchPublicUUID(searchTerm) {
                   item.appendChild(img);
                   item.appendChild(text);
                   
-                  // When clicked, fill the input with the chosen UUID and try lookup.
+                  // When clicked, fill the input with the chosen UUID and retry lookup.
                   item.addEventListener('click', function() {
                       inputBox.value = entity.uuid;
                       dropdown.style.display = 'none';
@@ -593,8 +594,7 @@ function searchPublicUUID(searchTerm) {
 }
 
 // --- Lookup Function ---
-// The lookup is triggered only by the Enter button.
-// It sanitizes the input and uses encodeURIComponent when building the URL.
+// This function is now triggered only by the Enter button.
 function handleInputChange() {
     var rawInput = inputBox.value;
     var quizID = sanitizeInput(rawInput);
@@ -602,9 +602,7 @@ function handleInputChange() {
     if (quizID !== "") {
         fetch(url)
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('');
-                }
+                if (!response.ok) { throw new Error(''); }
                 return response.json();
             })
             .then(data => {
@@ -625,8 +623,7 @@ function handleInputChange() {
     }
 }
 
-// Remove the "input" event listener so that lookup only occurs on button click.
-// inputBox.addEventListener('input', handleInputChange);
+// Note: We no longer attach an 'input' event listener so that the lookup occurs only when the Enter button is clicked.
 
 document.body.appendChild(uiElement);
 
@@ -711,12 +708,10 @@ document.addEventListener('keydown', (event) => {
     console.log(`Key pressed: "${event.key}"`);
     let overlay = document.querySelector(".floating-ui");
     if (!overlay) return console.log("Overlay not found!");
-    // Press ',' (Comma) to hide the overlay.
     if (event.key === ",") {
         console.log("Hiding overlay...");
         overlay.style.display = "none";
     }
-    // Press '.' (Dot) to show the overlay.
     if (event.key === ".") {
         console.log("Showing overlay...");
         overlay.style.display = "block";

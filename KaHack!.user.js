@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         KaHack!
-// @version      1.0.33
-// @description  A hack for kahoot.it! First tries proxy lookup by Quiz ID. If that fails, uses fallback search and displays a dropdown for selection.
+// @version      1.0.34
+// @description  A hack for kahoot.it! First tries proxy lookup by Quiz ID. If that fails, uses fallback search and displays a scrollable dropdown for selection.
 // @namespace    https://github.com/johnweeky
 // @updateURL    https://github.com/johnweeky/KaHack/raw/main/KaHack!.meta.js
 // @downloadURL  https://github.com/johnweeky/KaHack/raw/main/KaHack!.user.js
@@ -10,7 +10,7 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=kahoot.it
 // @grant        none
 // ==/UserScript==
-var Version = '1.0.33';
+var Version = '1.0.34';
 
 var questions = [];
 var info = {
@@ -37,8 +37,8 @@ function FindByAttributeValue(attribute, value, element_type) {
     }
 }
 
-// Sanitize input: Trim whitespace; if it starts with "https//" (missing colon) fix it.
-// If it is a full URL, return only its last non-empty segment.
+// Sanitize input: Trim whitespace; if it starts with "https//" (missing the colon), fix it.
+// If a full URL is provided, return only its last non-empty segment.
 function sanitizeInput(val) {
     val = val.trim();
     if (val.indexOf("https//") === 0) {
@@ -51,7 +51,7 @@ function sanitizeInput(val) {
     return val;
 }
 
-// --- UI Creation (unchanged from your original style) ---
+// --- UI Creation ---
 const uiElement = document.createElement('div');
 uiElement.className = 'floating-ui';
 uiElement.style.position = 'absolute';
@@ -114,26 +114,29 @@ minimizeButton.style.alignItems = 'center';
 minimizeButton.style.cursor = 'pointer';
 handle.appendChild(minimizeButton);
 
-const header = document.createElement('h2');
-header.textContent = 'QUIZ ID';
-header.style.display = 'block';
-header.style.margin = '1vw';
-header.style.textAlign = 'center';
-header.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
-header.style.fontSize = '2vw';
-header.style.color = 'white';
-header.style.textShadow = `
+// Change header text as requested.
+const headerText = document.createElement('h2');
+headerText.textContent = 'QUIZ ID/Name';
+headerText.style.display = 'block';
+headerText.style.margin = '1vw';
+headerText.style.textAlign = 'center';
+headerText.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
+headerText.style.fontSize = '2vw';
+headerText.style.color = 'white';
+headerText.style.textShadow = `
   -1px -1px 0 rgb(47, 47, 47),
   1px -1px 0 rgb(47, 47, 47),
   -1px 1px 0 rgb(47, 47, 47),
   1px 1px 0 rgb(47, 47, 47)
 `;
-uiElement.appendChild(header);
+uiElement.appendChild(headerText);
 
+// Input container – set as relative to position the dropdown
 const inputContainer = document.createElement('div');
 inputContainer.style.display = 'flex';
 inputContainer.style.flexDirection = 'column';
 inputContainer.style.alignItems = 'center';
+inputContainer.style.position = 'relative';  // make relative for absolute dropdown
 
 const inputBox = document.createElement('input');
 inputBox.type = 'text';
@@ -150,7 +153,7 @@ inputBox.style.textAlign = 'center';
 inputBox.style.fontSize = '1.15vw';
 inputContainer.appendChild(inputBox);
 
-// --- New: Enter button below the input ---
+// --- Enter button below the input ---
 const enterButton = document.createElement('button');
 enterButton.textContent = 'Enter';
 enterButton.style.display = 'block';
@@ -162,15 +165,19 @@ enterButton.addEventListener('click', handleInputChange);
 inputContainer.appendChild(enterButton);
 
 // --- Dropdown for fallback suggestions ---
+// Position it so that it appears directly below the Enter button.
 const dropdown = document.createElement('div');
 dropdown.style.position = 'absolute';
 dropdown.style.top = 'calc(100% + 0.5vw)';
+dropdown.style.left = '0';
 dropdown.style.width = '27.8vw';
 dropdown.style.backgroundColor = 'white';
 dropdown.style.border = '.1vw solid black';
 dropdown.style.borderRadius = '0.5vw';
 dropdown.style.zIndex = '10000';
 dropdown.style.display = 'none';
+dropdown.style.maxHeight = '20vw';      // Allow many options to be scrollable
+dropdown.style.overflowY = 'auto';
 inputContainer.appendChild(dropdown);
 
 uiElement.appendChild(inputContainer);
@@ -540,7 +547,7 @@ document.addEventListener('mouseup', () => {
 });
 
 // --- Fallback Dropdown Search ---
-// If the direct lookup fails, use the fallback endpoint:
+// If the direct lookup fails, search using the fallback endpoint:
 //   https://damp-leaf-16aa.johnwee.workers.dev/rest/kahoots/?query=SEARCHTERM
 function searchPublicUUID(searchTerm) {
     const searchUrl = 'https://damp-leaf-16aa.johnwee.workers.dev/rest/kahoots/?query=' + encodeURIComponent(searchTerm);
@@ -549,12 +556,11 @@ function searchPublicUUID(searchTerm) {
       .then(response => response.json())
       .then(data => {
           console.log("Fallback search data:", data);
-          // Our fallback response includes an "entities" array, where each entity has a "card" object.
+          // Expected structure: data.entities is an array of objects, each with a "card" property.
           let results = (data.entities && data.entities.length > 0) ? data.entities : [];
           dropdown.innerHTML = "";
           if (Array.isArray(results) && results.length > 0) {
-              results.slice(0,5).forEach(entity => {
-                  // Use the card object for display.
+              results.slice(0, 5).forEach(entity => {
                   let card = entity.card || {};
                   let displayTitle = card.title || card.name || "No title";
                   let displayCover = card.cover || card.image || 'https://dummyimage.com/50x50/ccc/fff.png&text=No+Image';
@@ -584,7 +590,7 @@ function searchPublicUUID(searchTerm) {
                   item.appendChild(img);
                   item.appendChild(text);
                   
-                  // When clicked, set the input to the chosen UUID and retry direct lookup.
+                  // On click, set the input to the chosen UUID and retry direct lookup.
                   item.addEventListener('click', function() {
                       console.log("Selected entity:", card);
                       inputBox.value = quizUUID;

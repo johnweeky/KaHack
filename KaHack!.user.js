@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         KaHack!
-// @version      1.0.34
+// @version      1.0.35
 // @description  A hack for kahoot.it! First tries proxy lookup by Quiz ID. If that fails, uses fallback search and displays a scrollable dropdown for selection.
 // @namespace    https://github.com/johnweeky
 // @updateURL    https://github.com/johnweeky/KaHack/raw/main/KaHack!.meta.js
@@ -10,7 +10,7 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=kahoot.it
 // @grant        none
 // ==/UserScript==
-var Version = '1.0.34';
+var Version = '1.0.35';
 
 var questions = [];
 var info = {
@@ -37,7 +37,7 @@ function FindByAttributeValue(attribute, value, element_type) {
     }
 }
 
-// Sanitize input: Trim whitespace; if it starts with "https//" (missing the colon), fix it.
+// Sanitize input: Trim whitespace; if it starts with "https//" (missing colon) fix it.
 // If a full URL is provided, return only its last non-empty segment.
 function sanitizeInput(val) {
     val = val.trim();
@@ -114,7 +114,6 @@ minimizeButton.style.alignItems = 'center';
 minimizeButton.style.cursor = 'pointer';
 handle.appendChild(minimizeButton);
 
-// Change header text as requested.
 const headerText = document.createElement('h2');
 headerText.textContent = 'QUIZ ID/Name';
 headerText.style.display = 'block';
@@ -131,12 +130,12 @@ headerText.style.textShadow = `
 `;
 uiElement.appendChild(headerText);
 
-// Input container – set as relative to position the dropdown
+// Input container (set relative for absolute dropdown positioning)
 const inputContainer = document.createElement('div');
 inputContainer.style.display = 'flex';
 inputContainer.style.flexDirection = 'column';
 inputContainer.style.alignItems = 'center';
-inputContainer.style.position = 'relative';  // make relative for absolute dropdown
+inputContainer.style.position = 'relative';
 
 const inputBox = document.createElement('input');
 inputBox.type = 'text';
@@ -165,7 +164,6 @@ enterButton.addEventListener('click', handleInputChange);
 inputContainer.appendChild(enterButton);
 
 // --- Dropdown for fallback suggestions ---
-// Position it so that it appears directly below the Enter button.
 const dropdown = document.createElement('div');
 dropdown.style.position = 'absolute';
 dropdown.style.top = 'calc(100% + 0.5vw)';
@@ -176,7 +174,7 @@ dropdown.style.border = '.1vw solid black';
 dropdown.style.borderRadius = '0.5vw';
 dropdown.style.zIndex = '10000';
 dropdown.style.display = 'none';
-dropdown.style.maxHeight = '20vw';      // Allow many options to be scrollable
+dropdown.style.maxHeight = '30vw';   // Increased maxHeight for more options
 dropdown.style.overflowY = 'auto';
 inputContainer.appendChild(dropdown);
 
@@ -491,7 +489,7 @@ let isMinimized = false;
 minimizeButton.addEventListener('click', () => {
     isMinimized = !isMinimized;
     if (isMinimized) {
-        header.style.display = 'none';
+        headerText.style.display = 'none';
         header2.style.display = 'none';
         header3.style.display = 'none';
         header4.style.display = 'none';
@@ -508,7 +506,7 @@ minimizeButton.addEventListener('click', () => {
         closeButton.style.height = '100%';
         minimizeButton.style.height = '100%';
     } else {
-        header.style.display = 'block';
+        headerText.style.display = 'block';
         header2.style.display = 'block';
         header3.style.display = 'block';
         header4.style.display = 'block';
@@ -547,8 +545,8 @@ document.addEventListener('mouseup', () => {
 });
 
 // --- Fallback Dropdown Search ---
-// If the direct lookup fails, search using the fallback endpoint:
-//   https://damp-leaf-16aa.johnwee.workers.dev/rest/kahoots/?query=SEARCHTERM
+// If direct lookup fails, use the fallback endpoint:
+// https://damp-leaf-16aa.johnwee.workers.dev/rest/kahoots/?query=SEARCHTERM
 function searchPublicUUID(searchTerm) {
     const searchUrl = 'https://damp-leaf-16aa.johnwee.workers.dev/rest/kahoots/?query=' + encodeURIComponent(searchTerm);
     console.log("Fallback search URL:", searchUrl);
@@ -556,11 +554,11 @@ function searchPublicUUID(searchTerm) {
       .then(response => response.json())
       .then(data => {
           console.log("Fallback search data:", data);
-          // Expected structure: data.entities is an array of objects, each with a "card" property.
           let results = (data.entities && data.entities.length > 0) ? data.entities : [];
           dropdown.innerHTML = "";
+          // Show all results (not just first 5)
           if (Array.isArray(results) && results.length > 0) {
-              results.slice(0, 5).forEach(entity => {
+              results.forEach(entity => {
                   let card = entity.card || {};
                   let displayTitle = card.title || card.name || "No title";
                   let displayCover = card.cover || card.image || 'https://dummyimage.com/50x50/ccc/fff.png&text=No+Image';
@@ -590,7 +588,7 @@ function searchPublicUUID(searchTerm) {
                   item.appendChild(img);
                   item.appendChild(text);
                   
-                  // On click, set the input to the chosen UUID and retry direct lookup.
+                  // On click, set input value to chosen UUID and retry direct lookup.
                   item.addEventListener('click', function() {
                       console.log("Selected entity:", card);
                       inputBox.value = quizUUID;

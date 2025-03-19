@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         KaHack!
-// @version      1.0.26
+// @version      1.0.27
 // @description  A hack for kahoot.it! Adds an Enter button below the input. When pressed, it performs a lookup. If the direct lookup fails, a dropdown of public options appears.
 // @namespace    https://github.com/johnweeky
 // @updateURL    https://github.com/johnweeky/KaHack/raw/main/KaHack!.meta.js
@@ -10,7 +10,7 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=kahoot.it
 // @grant        none
 // ==/UserScript==
-var Version = '1.0.26';
+var Version = '1.0.27';
 
 var questions = [];
 var info = {
@@ -35,8 +35,8 @@ function FindByAttributeValue(attribute, value, element_type) {
     }
 }
 
-// Sanitize input: Trim and if the string begins with "https//" (missing colon),
-// fix it to "https://". Then, if a URL is provided, return only the last non-empty segment.
+// Sanitize input: trims, fixes "https//" to "https://" if needed,
+// then if a URL is provided returns only the last non-empty segment.
 function sanitizeInput(val) {
     val = val.trim();
     if (val.indexOf("https//") === 0) {
@@ -49,7 +49,6 @@ function sanitizeInput(val) {
     return val;
 }
 
-// --- UI Creation (kept as in your original code) ---
 const uiElement = document.createElement('div');
 uiElement.className = 'floating-ui';
 uiElement.style.position = 'absolute';
@@ -148,7 +147,7 @@ inputBox.style.textAlign = 'center';
 inputBox.style.fontSize = '1.15vw';
 inputContainer.appendChild(inputBox);
 
-// --- New: Add an Enter button under the input ---
+// --- New: Add an Enter button below the input ---
 const enterButton = document.createElement('button');
 enterButton.textContent = 'Enter';
 enterButton.style.display = 'block';
@@ -479,7 +478,6 @@ closeButton.addEventListener('click', () => {
 });
 
 let isMinimized = false;
-
 minimizeButton.addEventListener('click', () => {
     isMinimized = !isMinimized;
     if (isMinimized) {
@@ -540,8 +538,9 @@ document.addEventListener('mouseup', () => {
 
 // --- Fallback Dropdown Search ---
 // If the direct lookup fails, search the public Kahoot API for quizzes by name.
+// Note: The search URL is now protocol relative.
 function searchPublicUUID(searchTerm) {
-    const searchUrl = 'https://kahoot.it/rest/kahoots/?query=' + encodeURIComponent(searchTerm);
+    const searchUrl = '//kahoot.it/rest/kahoots/?query=' + encodeURIComponent(searchTerm);
     fetch(searchUrl)
       .then(response => response.json())
       .then(data => {
@@ -594,7 +593,7 @@ function searchPublicUUID(searchTerm) {
 }
 
 // --- Lookup Function ---
-// This function is now triggered only by the Enter button.
+// Triggered only by the Enter button.
 function handleInputChange() {
     var rawInput = inputBox.value;
     var quizID = sanitizeInput(rawInput);
@@ -623,7 +622,8 @@ function handleInputChange() {
     }
 }
 
-// Note: We no longer attach an 'input' event listener so that the lookup occurs only when the Enter button is clicked.
+// Lookup is now triggered only by the Enter button (no input event listener).
+// inputBox.addEventListener('input', handleInputChange);
 
 document.body.appendChild(uiElement);
 

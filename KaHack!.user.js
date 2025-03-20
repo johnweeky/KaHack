@@ -1,14 +1,14 @@
 // ==UserScript==
 // @name         Kahoot Exploit (Mobile Friendly)
-// @version      1.0.38
-// @description  A hack for kahoot.it! First tries proxy lookup by Quiz ID. If that fails, uses fallback search and displays a scrollable dropdown for selection. Includes mobile-friendly media queries.
+// @version      1.0.39
+// @description  A hack for kahoot.it! First tries proxy lookup by Quiz ID. If that fails, uses fallback search and displays a scrollable dropdown for selection. Includes mobile-friendly media queries. Resets everything when input is cleared.
 // @namespace    https://github.com/johnweeky
 // @match        https://kahoot.it/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=kahoot.it
 // @grant        none
 // ==/UserScript==
 (function() {
-    var Version = '1.0.38';
+    var Version = '1.0.39';
 
     var questions = [];
     var info = {
@@ -178,7 +178,7 @@
     dropdown.style.display = 'none';
     inputContainer.appendChild(dropdown);
 
-    // X button to close dropdown
+    // X button to close dropdown & reset everything
     const dropdownCloseButton = document.createElement('button');
     dropdownCloseButton.textContent = 'X';
     dropdownCloseButton.style.position = 'absolute';
@@ -193,11 +193,26 @@
     dropdownCloseButton.style.cursor = 'pointer';
     dropdownCloseButton.style.fontSize = '1vw';
     dropdownCloseButton.style.display = 'none';
+
     dropdownCloseButton.addEventListener('click', function() {
+        // Clear input
         inputBox.value = "";
+        // Reset color
         inputBox.style.backgroundColor = 'white';
+        // Hide dropdown
         dropdown.style.display = 'none';
         dropdownCloseButton.style.display = 'none';
+
+        // Reset everything else
+        questions = [];
+        info.numQuestions = 0;
+        info.questionNum = -1;
+        info.lastAnsweredQuestion = -1;
+        inputLag = 100;
+
+        // Update labels
+        questionsLabel.textContent = 'Question 0 / 0';
+        inputLagLabel.textContent = 'Input lag : ' + inputLag + ' ms';
     });
     inputContainer.appendChild(dropdownCloseButton);
 
@@ -414,8 +429,7 @@
       transform: translateX(calc(var(--slider-size)));
     }
 
-    /* MEDIA QUERY for narrower screens (phones, small tablets).
-       Adjust max-width as you prefer. 768px is a typical tablet breakpoint. */
+    /* MEDIA QUERY for narrower screens (phones, small tablets). */
     @media (max-width: 768px) {
       .floating-ui {
         width: 80vw !important;

@@ -1,14 +1,14 @@
 // ==UserScript==
 // @name         Kahoot Exploit (Mobile Friendly)
-// @version      1.0.40
-// @description  A hack for kahoot.it! First tries proxy lookup by Quiz ID. If that fails, uses fallback search and displays a scrollable dropdown for selection. Includes mobile-friendly media queries and resets when input is cleared. Also, on mobile, a 3s long press toggles the UI visibility.
+// @version      1.0.41
+// @description  A hack for kahoot.it! First tries proxy lookup by Quiz ID. If that fails, uses fallback search and displays a scrollable dropdown for selection. Removes input lag text, removes 3s toggle, consistent "Enter" font, improved mobile dropdown styling.
 // @namespace    https://github.com/johnweeky
 // @match        https://kahoot.it/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=kahoot.it
 // @grant        none
 // ==/UserScript==
 (function() {
-    var Version = '1.0.40';
+    var Version = '1.0.41';
 
     var questions = [];
     var info = {
@@ -49,7 +49,7 @@
         return val;
     }
 
-    // Reset UI function – resets input styling, state variables and labels.
+    // Reset UI function – clears input, color, questions array, etc.
     function resetUI() {
         inputBox.value = "";
         inputBox.style.backgroundColor = 'white';
@@ -61,7 +61,7 @@
         info.lastAnsweredQuestion = -1;
         inputLag = 100;
         questionsLabel.textContent = 'Question 0 / 0';
-        inputLagLabel.textContent = 'Input lag : ' + inputLag + ' ms';
+        // We are removing the input lag text, so no more update needed
     }
 
     // --- UI Creation ---
@@ -127,7 +127,7 @@
     minimizeButton.style.cursor = 'pointer';
     handle.appendChild(minimizeButton);
 
-    // Header text
+    // QUIZ ID/NAME
     const headerText = document.createElement('h2');
     headerText.textContent = 'QUIZ ID/NAME';
     headerText.style.display = 'block';
@@ -144,7 +144,7 @@
     `;
     uiElement.appendChild(headerText);
 
-    // Input container (relative positioning for dropdown)
+    // Input container (relative for the dropdown)
     const inputContainer = document.createElement('div');
     inputContainer.style.display = 'flex';
     inputContainer.style.flexDirection = 'column';
@@ -166,16 +166,17 @@
     inputBox.style.fontSize = '1.15vw';
     inputContainer.appendChild(inputBox);
 
-    // Listen for input changes: if cleared, reset UI.
+    // If user manually clears input, reset
     inputBox.addEventListener('input', function() {
         if (inputBox.value.trim() === "") {
             resetUI();
         }
     });
 
-    // Enter button
+    // Enter button with consistent font
     const enterButton = document.createElement('button');
     enterButton.textContent = 'Enter';
+    enterButton.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif'; 
     enterButton.style.display = 'block';
     enterButton.style.marginTop = '0.5vw';
     enterButton.style.width = '27.8vw';
@@ -199,7 +200,7 @@
     dropdown.style.display = 'none';
     inputContainer.appendChild(dropdown);
 
-    // X button to close dropdown and clear/reset UI (separate from manual clearing)
+    // X button to close dropdown & reset
     const dropdownCloseButton = document.createElement('button');
     dropdownCloseButton.textContent = 'X';
     dropdownCloseButton.style.position = 'absolute';
@@ -462,6 +463,7 @@
         border-radius: 2vw !important;
       }
       .floating-ui button {
+        font-family: "Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
         font-size: 3vw !important;
         width: 60vw !important;
         height: 7vw !important;
@@ -489,6 +491,18 @@
       .floating-ui span {
         font-size: 3vw !important;
       }
+      /* For the dropdown on mobile, let's make it wider. */
+      .floating-ui div[style*="position: absolute;"][style*="z-index: 10000"] {
+        width: 60vw !important;
+      }
+      /* Adjust X button position on mobile */
+      .floating-ui button[style*="position: absolute;"][style*="background-color: red"] {
+        top: -3vw !important;
+        right: -3vw !important;
+        width: 6vw !important;
+        height: 6vw !important;
+        font-size: 3vw !important;
+      }
     }
     `;
     document.head.appendChild(style);
@@ -510,6 +524,7 @@
     `;
     uiElement.appendChild(header4);
 
+    // questionsLabel
     const questionsLabel = document.createElement('span');
     questionsLabel.textContent = 'Question 0 / 0';
     questionsLabel.style.display = 'block';
@@ -522,18 +537,9 @@
     questionsLabel.style.color = 'white';
     uiElement.appendChild(questionsLabel);
 
-    const inputLagLabel = document.createElement('span');
-    inputLagLabel.textContent = 'Input lag : 125 ms';
-    inputLagLabel.style.display = 'block';
-    inputLagLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
-    inputLagLabel.style.fontSize = '1.5vw';
-    inputLagLabel.style.textAlign = 'center';
-    inputLagLabel.style.margin = '1vw';
-    inputLagLabel.style.marginLeft = '1vw';
-    inputLagLabel.style.marginRight = '1vw';
-    inputLagLabel.style.color = 'white';
-    uiElement.appendChild(inputLagLabel);
+    // Removed the input lag text entirely, as requested.
 
+    // Version label
     const versionLabel = document.createElement('h1');
     versionLabel.textContent = 'Kahoot Exploit V' + Version;
     versionLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
@@ -598,7 +604,6 @@
             inputContainer.style.display = 'none';
             questionsLabel.style.display = 'none';
             versionLabel.style.display = 'none';
-            inputLagLabel.style.display = 'none';
             githubContainer.style.display = 'none';
             sliderContainer.style.display = 'none';
             autoAnswerSwitchContainer.style.display = 'none';
@@ -615,7 +620,6 @@
             inputContainer.style.display = 'flex';
             questionsLabel.style.display = 'block';
             versionLabel.style.display = 'block';
-            inputLagLabel.style.display = 'block';
             githubContainer.style.display = 'block';
             handle.style.height = '2.5vw';
             uiElement.style.height = 'auto';
@@ -683,7 +687,7 @@
                       
                       const text = document.createElement('span');
                       text.textContent = displayTitle;
-                      
+                      text.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
                       item.appendChild(img);
                       item.appendChild(text);
                       
@@ -837,23 +841,9 @@
         }
     });
 
-    // Mobile long-press toggle: If the device supports touch, a 3s long press toggles UI visibility.
-    if ('ontouchstart' in window) {
-        let touchTimeout;
-        uiElement.addEventListener('touchstart', function(e) {
-            touchTimeout = setTimeout(function(){
-                if (uiElement.style.display === 'none' || uiElement.style.display === '') {
-                    uiElement.style.display = 'block';
-                } else {
-                    uiElement.style.display = 'none';
-                }
-            }, 3000);
-        });
-        uiElement.addEventListener('touchend', function(e) {
-            clearTimeout(touchTimeout);
-        });
-    }
+    // No 3s mobile toggle anymore – removed.
 
+    // Interval loop: checks question state, auto-answer logic, etc.
     setInterval(function () {
         var textElement = FindByAttributeValue("data-functional-selector", "question-index-counter", "div");
         if (textElement){
@@ -883,6 +873,5 @@
             }
         }
         questionsLabel.textContent = 'Question ' + (info.questionNum + 1) + ' / ' + info.numQuestions;
-        inputLagLabel.textContent = 'Input lag : ' + inputLag + ' ms';
     }, 1);
 })();

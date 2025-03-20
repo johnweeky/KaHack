@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         KaHack!
-// @version      1.0.36
+// @version      1.0.37
 // @description  A hack for kahoot.it! First tries proxy lookup by Quiz ID. If that fails, uses fallback search and displays a scrollable dropdown for selection.
 // @namespace    https://github.com/johnweeky
 // @updateURL    https://github.com/johnweeky/KaHack/raw/main/KaHack!.meta.js
@@ -10,7 +10,7 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=kahoot.it
 // @grant        none
 // ==/UserScript==
-var Version = '1.0.36';
+var Version = '1.0.37';
 
 var questions = [];
 var info = {
@@ -68,7 +68,7 @@ const handle = document.createElement('div');
 handle.className = 'handle';
 handle.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
 handle.style.fontSize = '1.5vw';
-handle.textContent = 'KaHack!';
+handle.textContent = 'Kahoot Exploit';
 handle.style.color = 'white';
 handle.style.width = '97.5%';
 handle.style.height = '2.5vw';
@@ -116,7 +116,7 @@ handle.appendChild(minimizeButton);
 
 // Change header text to "QUIZ ID/Name"
 const headerText = document.createElement('h2');
-headerText.textContent = 'QUIZ ID/Name';
+headerText.textContent = 'QUIZ ID/NAME';
 headerText.style.display = 'block';
 headerText.style.margin = '1vw';
 headerText.style.textAlign = 'center';
@@ -142,7 +142,7 @@ const inputBox = document.createElement('input');
 inputBox.type = 'text';
 inputBox.style.color = 'black';
 // Change placeholder text as requested.
-inputBox.placeholder = 'Quiz Id/name of quiz';
+inputBox.placeholder = 'Quiz Id/Name of Quiz here...';
 inputBox.style.width = '27.8vw';
 inputBox.style.height = '1.5vw';
 inputBox.style.margin = '0';
@@ -460,7 +460,7 @@ inputLagLabel.style.color = 'white';
 uiElement.appendChild(inputLagLabel);
 
 const versionLabel = document.createElement('h1');
-versionLabel.textContent = 'KaHack! V' + Version;
+versionLabel.textContent = 'Kahoot Exploit V' + Version;
 versionLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
 versionLabel.style.fontSize = '2.5vw';
 versionLabel.style.display = 'block';

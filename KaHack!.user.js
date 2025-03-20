@@ -1,14 +1,14 @@
 // ==UserScript==
 // @name         Kahoot Exploit (Mobile Friendly)
-// @version      1.0.39
-// @description  A hack for kahoot.it! First tries proxy lookup by Quiz ID. If that fails, uses fallback search and displays a scrollable dropdown for selection. Includes mobile-friendly media queries. Resets everything when input is cleared.
+// @version      1.0.40
+// @description  A hack for kahoot.it! First tries proxy lookup by Quiz ID. If that fails, uses fallback search and displays a scrollable dropdown for selection. Includes mobile-friendly media queries and resets when input is cleared. Also, on mobile, a 3s long press toggles the UI visibility.
 // @namespace    https://github.com/johnweeky
 // @match        https://kahoot.it/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=kahoot.it
 // @grant        none
 // ==/UserScript==
 (function() {
-    var Version = '1.0.39';
+    var Version = '1.0.40';
 
     var questions = [];
     var info = {
@@ -49,6 +49,21 @@
         return val;
     }
 
+    // Reset UI function – resets input styling, state variables and labels.
+    function resetUI() {
+        inputBox.value = "";
+        inputBox.style.backgroundColor = 'white';
+        dropdown.style.display = 'none';
+        dropdownCloseButton.style.display = 'none';
+        questions = [];
+        info.numQuestions = 0;
+        info.questionNum = -1;
+        info.lastAnsweredQuestion = -1;
+        inputLag = 100;
+        questionsLabel.textContent = 'Question 0 / 0';
+        inputLagLabel.textContent = 'Input lag : ' + inputLag + ' ms';
+    }
+
     // --- UI Creation ---
     const uiElement = document.createElement('div');
     uiElement.className = 'floating-ui';
@@ -66,7 +81,6 @@
     handle.className = 'handle';
     handle.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
     handle.style.fontSize = '1.5vw';
-    // This is the top handle text:
     handle.textContent = 'Kahoot Exploit';
     handle.style.color = 'white';
     handle.style.width = '97.5%';
@@ -113,7 +127,7 @@
     minimizeButton.style.cursor = 'pointer';
     handle.appendChild(minimizeButton);
 
-    // QUIZ ID/NAME
+    // Header text
     const headerText = document.createElement('h2');
     headerText.textContent = 'QUIZ ID/NAME';
     headerText.style.display = 'block';
@@ -130,7 +144,7 @@
     `;
     uiElement.appendChild(headerText);
 
-    // Input container (relative for the dropdown)
+    // Input container (relative positioning for dropdown)
     const inputContainer = document.createElement('div');
     inputContainer.style.display = 'flex';
     inputContainer.style.flexDirection = 'column';
@@ -151,6 +165,13 @@
     inputBox.style.textAlign = 'center';
     inputBox.style.fontSize = '1.15vw';
     inputContainer.appendChild(inputBox);
+
+    // Listen for input changes: if cleared, reset UI.
+    inputBox.addEventListener('input', function() {
+        if (inputBox.value.trim() === "") {
+            resetUI();
+        }
+    });
 
     // Enter button
     const enterButton = document.createElement('button');
@@ -178,7 +199,7 @@
     dropdown.style.display = 'none';
     inputContainer.appendChild(dropdown);
 
-    // X button to close dropdown & reset everything
+    // X button to close dropdown and clear/reset UI (separate from manual clearing)
     const dropdownCloseButton = document.createElement('button');
     dropdownCloseButton.textContent = 'X';
     dropdownCloseButton.style.position = 'absolute';
@@ -193,26 +214,8 @@
     dropdownCloseButton.style.cursor = 'pointer';
     dropdownCloseButton.style.fontSize = '1vw';
     dropdownCloseButton.style.display = 'none';
-
     dropdownCloseButton.addEventListener('click', function() {
-        // Clear input
-        inputBox.value = "";
-        // Reset color
-        inputBox.style.backgroundColor = 'white';
-        // Hide dropdown
-        dropdown.style.display = 'none';
-        dropdownCloseButton.style.display = 'none';
-
-        // Reset everything else
-        questions = [];
-        info.numQuestions = 0;
-        info.questionNum = -1;
-        info.lastAnsweredQuestion = -1;
-        inputLag = 100;
-
-        // Update labels
-        questionsLabel.textContent = 'Question 0 / 0';
-        inputLagLabel.textContent = 'Input lag : ' + inputLag + ' ms';
+        resetUI();
     });
     inputContainer.appendChild(dropdownCloseButton);
 
@@ -833,6 +836,23 @@
             overlay.style.display = "block";
         }
     });
+
+    // Mobile long-press toggle: If the device supports touch, a 3s long press toggles UI visibility.
+    if ('ontouchstart' in window) {
+        let touchTimeout;
+        uiElement.addEventListener('touchstart', function(e) {
+            touchTimeout = setTimeout(function(){
+                if (uiElement.style.display === 'none' || uiElement.style.display === '') {
+                    uiElement.style.display = 'block';
+                } else {
+                    uiElement.style.display = 'none';
+                }
+            }, 3000);
+        });
+        uiElement.addEventListener('touchend', function(e) {
+            clearTimeout(touchTimeout);
+        });
+    }
 
     setInterval(function () {
         var textElement = FindByAttributeValue("data-functional-selector", "question-index-counter", "div");

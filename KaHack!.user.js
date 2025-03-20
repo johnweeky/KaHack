@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         KaHack!
-// @version      1.0.35
+// @version      1.0.36
 // @description  A hack for kahoot.it! First tries proxy lookup by Quiz ID. If that fails, uses fallback search and displays a scrollable dropdown for selection.
 // @namespace    https://github.com/johnweeky
 // @updateURL    https://github.com/johnweeky/KaHack/raw/main/KaHack!.meta.js
@@ -10,7 +10,7 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=kahoot.it
 // @grant        none
 // ==/UserScript==
-var Version = '1.0.35';
+var Version = '1.0.36';
 
 var questions = [];
 var info = {
@@ -114,6 +114,7 @@ minimizeButton.style.alignItems = 'center';
 minimizeButton.style.cursor = 'pointer';
 handle.appendChild(minimizeButton);
 
+// Change header text to "QUIZ ID/Name"
 const headerText = document.createElement('h2');
 headerText.textContent = 'QUIZ ID/Name';
 headerText.style.display = 'block';
@@ -130,7 +131,7 @@ headerText.style.textShadow = `
 `;
 uiElement.appendChild(headerText);
 
-// Input container (set relative for absolute dropdown positioning)
+// Input container (set as relative so the dropdown is positioned absolutely within it)
 const inputContainer = document.createElement('div');
 inputContainer.style.display = 'flex';
 inputContainer.style.flexDirection = 'column';
@@ -140,7 +141,8 @@ inputContainer.style.position = 'relative';
 const inputBox = document.createElement('input');
 inputBox.type = 'text';
 inputBox.style.color = 'black';
-inputBox.placeholder = 'Quiz Id here...';
+// Change placeholder text as requested.
+inputBox.placeholder = 'Quiz Id/name of quiz';
 inputBox.style.width = '27.8vw';
 inputBox.style.height = '1.5vw';
 inputBox.style.margin = '0';
@@ -173,10 +175,34 @@ dropdown.style.backgroundColor = 'white';
 dropdown.style.border = '.1vw solid black';
 dropdown.style.borderRadius = '0.5vw';
 dropdown.style.zIndex = '10000';
-dropdown.style.display = 'none';
-dropdown.style.maxHeight = '30vw';   // Increased maxHeight for more options
+// Allow many options to be scrollable.
+dropdown.style.maxHeight = '30vw';
 dropdown.style.overflowY = 'auto';
+dropdown.style.display = 'none';
 inputContainer.appendChild(dropdown);
+
+// --- X button to close dropdown and clear input --- 
+const dropdownCloseButton = document.createElement('button');
+dropdownCloseButton.textContent = 'X';
+dropdownCloseButton.style.position = 'absolute';
+dropdownCloseButton.style.top = '-2vw';
+dropdownCloseButton.style.right = '0';
+dropdownCloseButton.style.width = '2vw';
+dropdownCloseButton.style.height = '2vw';
+dropdownCloseButton.style.backgroundColor = 'red';
+dropdownCloseButton.style.color = 'white';
+dropdownCloseButton.style.border = 'none';
+dropdownCloseButton.style.borderRadius = '50%';
+dropdownCloseButton.style.cursor = 'pointer';
+dropdownCloseButton.style.fontSize = '1vw';
+dropdownCloseButton.style.display = 'none';
+dropdownCloseButton.addEventListener('click', function() {
+    inputBox.value = "";
+    inputBox.style.backgroundColor = 'white';
+    dropdown.style.display = 'none';
+    dropdownCloseButton.style.display = 'none';
+});
+inputContainer.appendChild(dropdownCloseButton);
 
 uiElement.appendChild(inputContainer);
 
@@ -446,11 +472,12 @@ versionLabel.style.color = 'white';
 uiElement.appendChild(versionLabel);
 
 const githubContainer = document.createElement('div');
+// Change "GitHub:" to "Links:"
 githubContainer.style.textAlign = 'center';
 githubContainer.style.marginTop = '1vw';
 
 const githubLabel = document.createElement('span');
-githubLabel.textContent = 'GitHub: ';
+githubLabel.textContent = 'Links: ';
 githubLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
 githubLabel.style.fontSize = '1.5vw';
 githubLabel.style.margin = '0 1vw';
@@ -545,8 +572,8 @@ document.addEventListener('mouseup', () => {
 });
 
 // --- Fallback Dropdown Search ---
-// If direct lookup fails, use the fallback endpoint:
-// https://damp-leaf-16aa.johnwee.workers.dev/rest/kahoots/?query=SEARCHTERM
+// If direct lookup fails, search using the fallback endpoint:
+//   https://damp-leaf-16aa.johnwee.workers.dev/rest/kahoots/?query=SEARCHTERM
 function searchPublicUUID(searchTerm) {
     const searchUrl = 'https://damp-leaf-16aa.johnwee.workers.dev/rest/kahoots/?query=' + encodeURIComponent(searchTerm);
     console.log("Fallback search URL:", searchUrl);
@@ -556,7 +583,7 @@ function searchPublicUUID(searchTerm) {
           console.log("Fallback search data:", data);
           let results = (data.entities && data.entities.length > 0) ? data.entities : [];
           dropdown.innerHTML = "";
-          // Show all results (not just first 5)
+          // Show all returned options
           if (Array.isArray(results) && results.length > 0) {
               results.forEach(entity => {
                   let card = entity.card || {};
@@ -588,24 +615,28 @@ function searchPublicUUID(searchTerm) {
                   item.appendChild(img);
                   item.appendChild(text);
                   
-                  // On click, set input value to chosen UUID and retry direct lookup.
+                  // On click, set input to the chosen UUID and retry direct lookup.
                   item.addEventListener('click', function() {
                       console.log("Selected entity:", card);
                       inputBox.value = quizUUID;
                       dropdown.style.display = 'none';
+                      dropdownCloseButton.style.display = 'none';
                       handleInputChange();
                   });
                   
                   dropdown.appendChild(item);
               });
               dropdown.style.display = 'block';
+              dropdownCloseButton.style.display = 'block';
           } else {
               dropdown.style.display = 'none';
+              dropdownCloseButton.style.display = 'none';
           }
       })
       .catch(err => {
           console.error("Fallback search error:", err);
           dropdown.style.display = 'none';
+          dropdownCloseButton.style.display = 'none';
       });
 }
 
@@ -626,6 +657,7 @@ function handleInputChange() {
                 console.log("Direct lookup data:", data);
                 inputBox.style.backgroundColor = 'green';
                 dropdown.style.display = 'none';
+                dropdownCloseButton.style.display = 'none';
                 questions = parseQuestions(data.questions);
                 info.numQuestions = questions.length;
             })

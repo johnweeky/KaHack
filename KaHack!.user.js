@@ -1,14 +1,14 @@
 // ==UserScript==
 // @name         Kahoot Exploit (Mobile Friendly)
-// @version      1.0.41
-// @description  A hack for kahoot.it! First tries proxy lookup by Quiz ID. If that fails, uses fallback search and displays a scrollable dropdown for selection. Removes input lag text, removes 3s toggle, consistent "Enter" font, improved mobile dropdown styling.
+// @version      1.0.42
+// @description  A hack for kahoot.it! First tries proxy lookup by Quiz ID. If that fails, uses fallback search and displays a scrollable dropdown for selection. Removes input lag text, consistent "Enter" font, improved mobile dropdown styling, top handle text changed, links updated.
 // @namespace    https://github.com/johnweeky
 // @match        https://kahoot.it/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=kahoot.it
 // @grant        none
 // ==/UserScript==
 (function() {
-    var Version = '1.0.41';
+    var Version = '1.0.42';
 
     var questions = [];
     var info = {
@@ -61,7 +61,6 @@
         info.lastAnsweredQuestion = -1;
         inputLag = 100;
         questionsLabel.textContent = 'Question 0 / 0';
-        // We are removing the input lag text, so no more update needed
     }
 
     // --- UI Creation ---
@@ -81,7 +80,8 @@
     handle.className = 'handle';
     handle.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
     handle.style.fontSize = '1.5vw';
-    handle.textContent = 'Kahoot Exploit';
+    // Changed top handle text
+    handle.textContent = 'Kahoot Exploit by JW';
     handle.style.color = 'white';
     handle.style.width = '97.5%';
     handle.style.height = '2.5vw';
@@ -537,7 +537,7 @@
     questionsLabel.style.color = 'white';
     uiElement.appendChild(questionsLabel);
 
-    // Removed the input lag text entirely, as requested.
+    // Removed input lag text from the UI entirely
 
     // Version label
     const versionLabel = document.createElement('h1');
@@ -565,25 +565,27 @@
     githubLabel.style.color = 'white';
     githubContainer.appendChild(githubLabel);
 
-    const githubUrl = document.createElement('a');
-    githubUrl.textContent = 'John Wee';
-    githubUrl.href = 'https://johnwee.co';
-    githubUrl.target = '_blank';
-    githubUrl.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
-    githubUrl.style.fontSize = '1.5vw';
-    githubUrl.style.margin = '0 1vw';
-    githubUrl.style.color = 'white';
-    githubContainer.appendChild(githubUrl);
+    // 1) JW Tool Suite → https://landing.kahoot.space
+    const link1 = document.createElement('a');
+    link1.textContent = 'JW Tool Suite';
+    link1.href = 'https://landing.kahoot.space';
+    link1.target = '_blank';
+    link1.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
+    link1.style.fontSize = '1.5vw';
+    link1.style.margin = '0 1vw';
+    link1.style.color = 'white';
+    githubContainer.appendChild(link1);
 
-    const githubUrl2 = document.createElement('a');
-    githubUrl2.textContent = 'johnweeky';
-    githubUrl2.href = 'https://github.com/johnweeky';
-    githubUrl2.target = '_blank';
-    githubUrl2.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
-    githubUrl2.style.fontSize = '1.5vw';
-    githubUrl2.style.margin = '0 1vw';
-    githubUrl2.style.color = 'white';
-    githubContainer.appendChild(githubUrl2);
+    // 2) John Wee → https://johnwee.co
+    const link2 = document.createElement('a');
+    link2.textContent = 'John Wee';
+    link2.href = 'https://johnw.ee';
+    link2.target = '_blank';
+    link2.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
+    link2.style.fontSize = '1.5vw';
+    link2.style.margin = '0 1vw';
+    link2.style.color = 'white';
+    githubContainer.appendChild(link2);
 
     uiElement.appendChild(githubContainer);
 
@@ -840,8 +842,6 @@
             overlay.style.display = "block";
         }
     });
-
-    // No 3s mobile toggle anymore – removed.
 
     // Interval loop: checks question state, auto-answer logic, etc.
     setInterval(function () {

@@ -1,28 +1,22 @@
 // ==UserScript==
 // @name         Kahoot Exploit (Mobile Friendly)
-// @version      1.0.42
-// @description  A hack for kahoot.it! First tries proxy lookup by Quiz ID. If that fails, uses fallback search and displays a scrollable dropdown for selection. Removes input lag text, consistent "Enter" font, improved mobile dropdown styling, top handle text changed, links updated.
+// @version      2.0.0
+// @description  Show-only Kahoot helper! Highlights correct answers and shows next question preview. Stealth UI with password protection. No auto-answering - manual clicking only.
 // @namespace    https://github.com/johnweeky
 // @match        https://kahoot.it/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=kahoot.it
 // @grant        none
 // ==/UserScript==
 (function() {
-    var Version = '1.0.42';
+    var Version = '2.0.0';
 
     var questions = [];
     var info = {
         numQuestions: 0,
         questionNum: -1,
         lastAnsweredQuestion: -1,
-        defaultIL: true,
-        ILSetQuestion: -1,
     };
-    var PPT = 950;
-    var Answered_PPT = 950;
-    var autoAnswer = false;
     var showAnswers = false;
-    var inputLag = 100;
 
     // Helper: Finds an element by attribute value.
     function FindByAttributeValue(attribute, value, element_type) {
@@ -59,8 +53,12 @@
         info.numQuestions = 0;
         info.questionNum = -1;
         info.lastAnsweredQuestion = -1;
-        inputLag = 100;
         questionsLabel.textContent = 'Question 0 / 0';
+        // Reset next question preview
+        const nextQuestionDisplay = document.getElementById('nextQuestionDisplay');
+        if (nextQuestionDisplay) {
+            nextQuestionDisplay.textContent = 'Loading...';
+        }
     }
 
     // --- UI Creation ---
@@ -223,65 +221,11 @@
 
     uiElement.appendChild(inputContainer);
 
-    // POINTS PER QUESTION
-    const header2 = document.createElement('h2');
-    header2.textContent = 'POINTS PER QUESTION';
-    header2.style.display = 'block';
-    header2.style.margin = '1vw';
-    header2.style.textAlign = 'center';
-    header2.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
-    header2.style.fontSize = '2vw';
-    header2.style.color = 'white';
-    header2.style.textShadow = `
-      -1px -1px 0 rgb(47, 47, 47),
-      1px -1px 0 rgb(47, 47, 47),
-      -1px 1px 0 rgb(47, 47, 47),
-      1px 1px 0 rgb(47, 47, 47)
-    `;
-    uiElement.appendChild(header2);
 
-    const sliderContainer = document.createElement('div');
-    sliderContainer.style.width = '80%';
-    sliderContainer.style.margin = '1vw auto';
-    sliderContainer.style.display = 'flex';
-    sliderContainer.style.alignItems = 'center';
-    sliderContainer.style.justifyContent = 'center';
 
-    const pointsLabel = document.createElement('span');
-    pointsLabel.textContent = 'Points per Question: 950';
-    pointsLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
-    pointsLabel.style.fontSize = '1.5vw';
-    pointsLabel.style.margin = '1vw';
-    pointsLabel.style.marginLeft = '1vw';
-    pointsLabel.style.marginRight = '1vw';
-    pointsLabel.style.color = 'white';
-    sliderContainer.appendChild(pointsLabel);
-
-    const pointsSlider = document.createElement('input');
-    pointsSlider.type = 'range';
-    pointsSlider.min = '500';
-    pointsSlider.max = '1000';
-    pointsSlider.value = '950';
-    pointsSlider.style.width = '70%';
-    pointsSlider.style.marginLeft = '1vw';
-    pointsSlider.style.marginRight = '1vw';
-    pointsSlider.style.border = 'none';
-    pointsSlider.style.outline = 'none';
-    pointsSlider.style.cursor = 'ew-resize';
-    pointsSlider.className = 'custom-slider';
-    sliderContainer.appendChild(pointsSlider);
-
-    uiElement.appendChild(sliderContainer);
-
-    pointsSlider.addEventListener('input', () => {
-        const points = +pointsSlider.value;
-        PPT = points;
-        pointsLabel.textContent = 'Points per Question: ' + points;
-    });
-
-    // ANSWERING
+    // SHOW ANSWERS
     const header3 = document.createElement('h2');
-    header3.textContent = 'ANSWERING';
+    header3.textContent = 'SHOW ANSWERS';
     header3.style.display = 'block';
     header3.style.margin = '1vw';
     header3.style.textAlign = 'center';
@@ -295,38 +239,6 @@
       1px 1px 0 rgb(47, 47, 47)
     `;
     uiElement.appendChild(header3);
-
-    const autoAnswerSwitchContainer = document.createElement('div');
-    autoAnswerSwitchContainer.className = 'switch-container';
-    autoAnswerSwitchContainer.style.display = 'flex';
-    autoAnswerSwitchContainer.style.alignItems = 'center';
-    autoAnswerSwitchContainer.style.justifyContent = 'center';
-    uiElement.appendChild(autoAnswerSwitchContainer);
-
-    const autoAnswerLabel = document.createElement('span');
-    autoAnswerLabel.textContent = 'Auto Answer';
-    autoAnswerLabel.className = 'switch-label';
-    autoAnswerLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
-    autoAnswerLabel.style.fontSize = '1.5vw';
-    autoAnswerLabel.style.color = 'white';
-    autoAnswerLabel.style.margin = '2.5vw';
-    autoAnswerSwitchContainer.appendChild(autoAnswerLabel);
-
-    const autoAnswerSwitch = document.createElement('label');
-    autoAnswerSwitch.className = 'switch';
-    autoAnswerSwitchContainer.appendChild(autoAnswerSwitch);
-
-    const autoAnswerInput = document.createElement('input');
-    autoAnswerInput.type = 'checkbox';
-    autoAnswerInput.addEventListener('change', function() {
-        autoAnswer = this.checked;
-        info.ILSetQuestion = info.questionNum;
-    });
-    autoAnswerSwitch.appendChild(autoAnswerInput);
-
-    const autoAnswerSlider = document.createElement('span');
-    autoAnswerSlider.className = 'slider';
-    autoAnswerSwitch.appendChild(autoAnswerSlider);
 
     const showAnswersSwitchContainer = document.createElement('div');
     showAnswersSwitchContainer.className = 'switch-container';
@@ -358,6 +270,34 @@
     const showAnswersSlider = document.createElement('span');
     showAnswersSlider.className = 'slider';
     showAnswersSwitch.appendChild(showAnswersSlider);
+
+    // NEXT QUESTION PREVIEW
+    const nextQuestionContainer = document.createElement('div');
+    nextQuestionContainer.style.margin = '1vw';
+    nextQuestionContainer.style.padding = '1vw';
+    nextQuestionContainer.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+    nextQuestionContainer.style.borderRadius = '0.5vw';
+    nextQuestionContainer.style.textAlign = 'center';
+    uiElement.appendChild(nextQuestionContainer);
+
+    const nextQuestionLabel = document.createElement('h3');
+    nextQuestionLabel.textContent = 'NEXT QUESTION PREVIEW';
+    nextQuestionLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
+    nextQuestionLabel.style.fontSize = '1.5vw';
+    nextQuestionLabel.style.color = 'white';
+    nextQuestionLabel.style.margin = '0.5vw 0';
+    nextQuestionContainer.appendChild(nextQuestionLabel);
+
+    const nextQuestionDisplay = document.createElement('div');
+    nextQuestionDisplay.id = 'nextQuestionDisplay';
+    nextQuestionDisplay.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
+    nextQuestionDisplay.style.fontSize = '1.8vw';
+    nextQuestionDisplay.style.color = '#00ff00';
+    nextQuestionDisplay.style.fontWeight = 'bold';
+    nextQuestionDisplay.style.margin = '0.5vw 0';
+    nextQuestionDisplay.style.textShadow = '0 0 5px rgba(0, 255, 0, 0.5)';
+    nextQuestionDisplay.textContent = 'Loading...';
+    nextQuestionContainer.appendChild(nextQuestionDisplay);
 
     // CSS style including media queries for mobile
     const style = document.createElement('style');
@@ -542,7 +482,7 @@
 
     // Version label
     const versionLabel = document.createElement('h1');
-    versionLabel.textContent = 'Kahoot Exploit V' + Version;
+    versionLabel.textContent = 'Connection Error V' + Version;
     versionLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
     versionLabel.style.fontSize = '2.5vw';
     versionLabel.style.display = 'block';
@@ -592,7 +532,6 @@
 
     closeButton.addEventListener('click', () => {
         document.body.removeChild(uiElement);
-        autoAnswer = false;
         showAnswers = false;
     });
 
@@ -608,9 +547,9 @@
             questionsLabel.style.display = 'none';
             versionLabel.style.display = 'none';
             githubContainer.style.display = 'none';
-            sliderContainer.style.display = 'none';
-            autoAnswerSwitchContainer.style.display = 'none';
+
             showAnswersSwitchContainer.style.display = 'none';
+            nextQuestionContainer.style.display = 'none';
             uiElement.style.height = '2.5vw';
             handle.style.height = '100%';
             closeButton.style.height = '100%';
@@ -628,9 +567,9 @@
             uiElement.style.height = 'auto';
             closeButton.style.height = '2.5vw';
             minimizeButton.style.height = '2.5vw';
-            sliderContainer.style.display = 'flex';
-            autoAnswerSwitchContainer.style.display = 'flex';
+
             showAnswersSwitchContainer.style.display = 'flex';
+            nextQuestionContainer.style.display = 'block';
         }
     });
 
@@ -836,14 +775,12 @@
     }
 
     function onQuestionStart(){
-        console.log("onQuestionStart, inputLag =", inputLag);
         var question = questions[info.questionNum];
         if (showAnswers){
             highlightAnswers(question);
         }
-        if (autoAnswer){
-            answer(question, (question.time - question.time / (500/(PPT-500))) - inputLag);
-        }
+        // Update next question preview
+        updateNextQuestionPreview();
     }
 
     function highlightAnswers(question){
@@ -859,28 +796,38 @@
         });
     }
 
-    function answer(question, time) {
-        Answered_PPT = PPT;
-        var delay = (question.type == 'multiple_select_quiz') ? 60 : 0;
-        setTimeout(function() {
-            if (question.type == 'quiz') {
-                const key = (+question.answers[0] + 1).toString();
-                const event = new KeyboardEvent('keydown', { key: key });
-                window.dispatchEvent(event);
-            }
-            if (question.type == 'multiple_select_quiz') {
-                question.answers.forEach(function(answer) {
-                    setTimeout(function() {
-                        const key = (+answer + 1).toString();
-                        const event = new KeyboardEvent('keydown', { key: key });
-                        window.dispatchEvent(event);
-                    }, 0);
-                });
-                setTimeout(function() {
-                    FindByAttributeValue("data-functional-selector", 'multi-select-submit-button', "button").click();
-                }, 0);
-            }
-        }, time - delay);
+    function updateNextQuestionPreview() {
+        const nextQuestionDisplay = document.getElementById('nextQuestionDisplay');
+        if (!nextQuestionDisplay) return;
+
+        const nextQuestionIndex = info.questionNum + 1;
+        
+        if (nextQuestionIndex >= questions.length || nextQuestionIndex < 0) {
+            nextQuestionDisplay.textContent = 'No more questions';
+            return;
+        }
+
+        const nextQuestion = questions[nextQuestionIndex];
+        if (!nextQuestion || !nextQuestion.answers) {
+            nextQuestionDisplay.textContent = 'Question data not available';
+            return;
+        }
+
+        // Format: Q2: 1/3 (for single answer) or Q2: 1/2/4 (for multiple answers)
+        let answerText = `Q${nextQuestionIndex + 1}: `;
+        
+        if (nextQuestion.type === 'quiz') {
+            // Single answer
+            answerText += (nextQuestion.answers[0] + 1).toString();
+        } else if (nextQuestion.type === 'multiple_select_quiz') {
+            // Multiple answers
+            const answerNumbers = nextQuestion.answers.map(answer => (answer + 1).toString());
+            answerText += answerNumbers.join('/');
+        } else {
+            answerText += 'Special Question';
+        }
+
+        nextQuestionDisplay.textContent = answerText;
     }
 
     let isHidden = false;
@@ -908,25 +855,8 @@
             info.lastAnsweredQuestion = info.questionNum;
             onQuestionStart();
         }
-        if (autoAnswer){
-            if (info.ILSetQuestion != info.questionNum){
-                var ppt = Answered_PPT;
-                if (ppt > 987) ppt = 1000;
-                var incrementElement = FindByAttributeValue("data-functional-selector", "score-increment", "span");
-                if (incrementElement){
-                    info.ILSetQuestion = info.questionNum;
-                    var increment = +incrementElement.textContent.split(" ")[1];
-                    if (increment != 0){
-                        inputLag += (ppt - increment) * 15;
-                        if (inputLag < 0) {
-                            inputLag -= (ppt - increment) * 15;
-                            inputLag += (ppt - increment/2) * 15;
-                        }
-                        inputLag = Math.round(inputLag);
-                    }
-                }
-            }
-        }
+        // Update next question preview whenever question changes
+        updateNextQuestionPreview();
         questionsLabel.textContent = 'Question ' + (info.questionNum + 1) + ' / ' + info.numQuestions;
     }, 1);
 })();

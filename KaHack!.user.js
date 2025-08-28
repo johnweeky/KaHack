@@ -81,7 +81,8 @@
     handle.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
     handle.style.fontSize = '1.5vw';
     // Changed top handle text
-    handle.textContent = 'Kahoot Exploit by JW';
+    handle.textContent = 'Connection Error';
+    handle.style.cursor = 'pointer'; // Make it clickable
     handle.style.color = 'white';
     handle.style.width = '97.5%';
     handle.style.height = '2.5vw';
@@ -633,12 +634,24 @@
         }
     });
 
+    // Add click handler to handle title for hiding UI
+    handle.addEventListener('click', function(e) {
+        // Only hide if clicking on the text part, not the buttons
+        if (e.target === handle) {
+            uiElement.style.display = 'none';
+            langSelector.style.display = 'block';
+        }
+    });
+
     let isDragging = false;
     let offsetX, offsetY;
     handle.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        offsetX = e.clientX - uiElement.getBoundingClientRect().left;
-        offsetY = e.clientY - uiElement.getBoundingClientRect().top;
+        // Prevent hiding when dragging
+        if (e.target === handle) {
+            isDragging = true;
+            offsetX = e.clientX - uiElement.getBoundingClientRect().left;
+            offsetY = e.clientY - uiElement.getBoundingClientRect().top;
+        }
     });
     document.addEventListener('mousemove', (e) => {
         if (isDragging) {
@@ -648,8 +661,12 @@
             uiElement.style.top = y + 'px';
         }
     });
-    document.addEventListener('mouseup', () => {
-        isDragging = false;
+    document.addEventListener('mouseup', (e) => {
+        if (isDragging) {
+            isDragging = false;
+            // Prevent click event from firing if we were dragging
+            e.stopPropagation();
+        }
     });
 
     // --- Fallback Dropdown Search ---
@@ -750,6 +767,44 @@
         }
     }
 
+    // Password protection - check if first time
+    const hasBeenUnlocked = localStorage.getItem('kahoot_unlocked');
+    if (!hasBeenUnlocked) {
+        const password = prompt('Enter password to access Connection Error:');
+        if (password !== 'JW') {
+            alert('Incorrect password!');
+            return; // Exit the script
+        }
+        localStorage.setItem('kahoot_unlocked', 'true');
+    }
+
+    // Create language selector (hidden UI state)
+    const langSelector = document.createElement('div');
+    langSelector.style.position = 'absolute';
+    langSelector.style.top = '10px';
+    langSelector.style.right = '10px';
+    langSelector.style.width = '40px';
+    langSelector.style.height = '20px';
+    langSelector.style.backgroundColor = '#f0f0f0';
+    langSelector.style.border = '1px solid #ccc';
+    langSelector.style.borderRadius = '3px';
+    langSelector.style.cursor = 'pointer';
+    langSelector.style.fontSize = '10px';
+    langSelector.style.textAlign = 'center';
+    langSelector.style.lineHeight = '20px';
+    langSelector.style.color = '#666';
+    langSelector.style.zIndex = '9998';
+    langSelector.style.display = 'none'; // Hidden by default
+    langSelector.textContent = 'EN';
+    langSelector.title = 'Language Selector';
+
+    // Add click handler to show UI
+    langSelector.addEventListener('click', function() {
+        uiElement.style.display = 'block';
+        langSelector.style.display = 'none';
+    });
+
+    document.body.appendChild(langSelector);
     document.body.appendChild(uiElement);
 
     function parseQuestions(questionsJson){

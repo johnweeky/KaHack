@@ -143,7 +143,7 @@
       -1px 1px 0 rgb(47, 47, 47),
       1px 1px 0 rgb(47, 47, 47)
     `;
-    uiElement.appendChild(headerText);
+    // headerText will be added to mainUIContent later
 
     // Input container (relative for the dropdown)
     const inputContainer = document.createElement('div');
@@ -292,7 +292,7 @@
     });
     inputContainer.appendChild(dropdownCloseButton);
 
-    uiElement.appendChild(inputContainer);
+    // inputContainer will be added to mainUIContent later
 
 
 
@@ -311,14 +311,14 @@
       -1px 1px 0 rgb(47, 47, 47),
       1px 1px 0 rgb(47, 47, 47)
     `;
-    uiElement.appendChild(header3);
+    // header3 will be added to mainUIContent later
 
     const showAnswersSwitchContainer = document.createElement('div');
     showAnswersSwitchContainer.className = 'switch-container';
     showAnswersSwitchContainer.style.display = 'flex';
     showAnswersSwitchContainer.style.alignItems = 'center';
     showAnswersSwitchContainer.style.justifyContent = 'center';
-    uiElement.appendChild(showAnswersSwitchContainer);
+    // showAnswersSwitchContainer will be added to mainUIContent later
 
     const showAnswersLabel = document.createElement('span');
     showAnswersLabel.textContent = 'Show Answers';
@@ -351,7 +351,7 @@
     nextQuestionContainer.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
     nextQuestionContainer.style.borderRadius = '0.5vw';
     nextQuestionContainer.style.textAlign = 'center';
-    uiElement.appendChild(nextQuestionContainer);
+    // nextQuestionContainer will be added to mainUIContent later
 
     const nextQuestionLabel = document.createElement('h3');
     nextQuestionLabel.textContent = 'NEXT QUESTION PREVIEW';
@@ -524,6 +524,29 @@
         height: 6vw !important;
         font-size: 3vw !important;
       }
+      
+      /* Authentication UI mobile styles */
+      #authContainer h2 {
+        font-size: 4vw !important;
+      }
+      #authContainer p {
+        font-size: 3vw !important;
+      }
+      #passwordInput {
+        width: 60vw !important;
+        height: 6vw !important;
+        font-size: 3vw !important;
+        border-radius: 2vw !important;
+      }
+      #authContainer button {
+        width: 25vw !important;
+        height: 7vw !important;
+        font-size: 3vw !important;
+        border-radius: 2vw !important;
+      }
+      #authError {
+        font-size: 2.5vw !important;
+      }
     }
     `;
     document.head.appendChild(style);
@@ -543,7 +566,7 @@
       -1px 1px 0 rgb(47, 47, 47),
       1px 1px 0 rgb(47, 47, 47)
     `;
-    uiElement.appendChild(header4);
+    // header4 will be added to mainUIContent later
 
     // questionsLabel
     const questionsLabel = document.createElement('span');
@@ -556,7 +579,7 @@
     questionsLabel.style.marginLeft = '1vw';
     questionsLabel.style.marginRight = '1vw';
     questionsLabel.style.color = 'white';
-    uiElement.appendChild(questionsLabel);
+    // questionsLabel will be added to mainUIContent later
 
     // Removed input lag text from the UI entirely
 
@@ -571,7 +594,7 @@
     versionLabel.style.marginLeft = '1vw';
     versionLabel.style.marginRight = '1vw';
     versionLabel.style.color = 'white';
-    uiElement.appendChild(versionLabel);
+    // versionLabel will be added to mainUIContent later
 
     // "Links:" container
     const githubContainer = document.createElement('div');
@@ -608,7 +631,25 @@
     link2.style.color = 'white';
     githubContainer.appendChild(link2);
 
-    uiElement.appendChild(githubContainer);
+    // Add logout button to github container
+    const logoutButton = document.createElement('button');
+    logoutButton.textContent = 'Logout';
+    logoutButton.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
+    logoutButton.style.fontSize = '1.2vw';
+    logoutButton.style.backgroundColor = '#ff4444';
+    logoutButton.style.color = 'white';
+    logoutButton.style.border = 'none';
+    logoutButton.style.borderRadius = '0.5vw';
+    logoutButton.style.padding = '0.3vw 1vw';
+    logoutButton.style.cursor = 'pointer';
+    logoutButton.style.margin = '0.5vw';
+    logoutButton.addEventListener('click', function() {
+        localStorage.removeItem('kahoot_unlocked');
+        showAuthUI();
+    });
+    githubContainer.appendChild(logoutButton);
+
+    // githubContainer will be added to mainUIContent later
 
     closeButton.addEventListener('click', () => {
         document.body.removeChild(uiElement);
@@ -782,16 +823,152 @@
         }
     }
 
-    // Password protection - check if first time
-    const hasBeenUnlocked = localStorage.getItem('kahoot_unlocked');
-    if (!hasBeenUnlocked) {
-        const password = prompt('Enter password to access Connection Error:');
-        if (password !== 'JW') {
-            alert('Incorrect password!');
-            return; // Exit the script
+    // Password Authentication UI
+    function createAuthUI() {
+        const authContainer = document.createElement('div');
+        authContainer.id = 'authContainer';
+        authContainer.style.display = 'flex';
+        authContainer.style.flexDirection = 'column';
+        authContainer.style.alignItems = 'center';
+        authContainer.style.padding = '2vw';
+        authContainer.style.textAlign = 'center';
+
+        const authTitle = document.createElement('h2');
+        authTitle.textContent = 'AUTHENTICATION REQUIRED';
+        authTitle.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
+        authTitle.style.fontSize = '2vw';
+        authTitle.style.color = 'white';
+        authTitle.style.margin = '1vw';
+        authTitle.style.textShadow = `
+          -1px -1px 0 rgb(47, 47, 47),
+          1px -1px 0 rgb(47, 47, 47),
+          -1px 1px 0 rgb(47, 47, 47),
+          1px 1px 0 rgb(47, 47, 47)
+        `;
+        authContainer.appendChild(authTitle);
+
+        const authDescription = document.createElement('p');
+        authDescription.textContent = 'Enter password to access Connection Error';
+        authDescription.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
+        authDescription.style.fontSize = '1.3vw';
+        authDescription.style.color = 'white';
+        authDescription.style.margin = '1vw';
+        authContainer.appendChild(authDescription);
+
+        const passwordInput = document.createElement('input');
+        passwordInput.type = 'password';
+        passwordInput.id = 'passwordInput';
+        passwordInput.placeholder = 'Enter password...';
+        passwordInput.style.width = '20vw';
+        passwordInput.style.height = '2vw';
+        passwordInput.style.margin = '1vw';
+        passwordInput.style.padding = '0.5vw';
+        passwordInput.style.border = '.1vw solid black';
+        passwordInput.style.borderRadius = '1vw';
+        passwordInput.style.outline = 'none';
+        passwordInput.style.textAlign = 'center';
+        passwordInput.style.fontSize = '1.2vw';
+        passwordInput.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
+        authContainer.appendChild(passwordInput);
+
+        const loginButton = document.createElement('button');
+        loginButton.textContent = 'Login';
+        loginButton.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
+        loginButton.style.width = '10vw';
+        loginButton.style.height = '2.5vw';
+        loginButton.style.fontSize = '1.2vw';
+        loginButton.style.cursor = 'pointer';
+        loginButton.style.backgroundColor = '#4CAF50';
+        loginButton.style.color = 'white';
+        loginButton.style.border = 'none';
+        loginButton.style.borderRadius = '1vw';
+        loginButton.style.margin = '1vw';
+        authContainer.appendChild(loginButton);
+
+        const errorMessage = document.createElement('div');
+        errorMessage.id = 'authError';
+        errorMessage.style.color = '#ff4444';
+        errorMessage.style.fontSize = '1.1vw';
+        errorMessage.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
+        errorMessage.style.margin = '0.5vw';
+        errorMessage.style.display = 'none';
+        authContainer.appendChild(errorMessage);
+
+        // Login functionality
+        function attemptLogin() {
+            const password = passwordInput.value;
+            if (password === 'JW') {
+                localStorage.setItem('kahoot_unlocked', 'true');
+                showMainUI();
+            } else {
+                errorMessage.textContent = 'Incorrect password. Please try again.';
+                errorMessage.style.display = 'block';
+                passwordInput.value = '';
+                passwordInput.focus();
+                setTimeout(() => {
+                    errorMessage.style.display = 'none';
+                }, 3000);
+            }
         }
-        localStorage.setItem('kahoot_unlocked', 'true');
+
+        loginButton.addEventListener('click', attemptLogin);
+        passwordInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                attemptLogin();
+            }
+        });
+
+        return authContainer;
     }
+
+    // Main UI content container
+    const mainUIContent = document.createElement('div');
+    mainUIContent.id = 'mainUIContent';
+    
+    // Move all existing UI elements into mainUIContent
+    mainUIContent.appendChild(headerText);
+    mainUIContent.appendChild(inputContainer);
+    mainUIContent.appendChild(header3);
+    mainUIContent.appendChild(showAnswersSwitchContainer);
+    mainUIContent.appendChild(nextQuestionContainer);
+    mainUIContent.appendChild(header4);
+    mainUIContent.appendChild(questionsLabel);
+    mainUIContent.appendChild(versionLabel);
+    mainUIContent.appendChild(githubContainer);
+
+    // Check authentication status and show appropriate UI
+    function checkAuthStatus() {
+        const isUnlocked = localStorage.getItem('kahoot_unlocked') === 'true';
+        if (isUnlocked) {
+            showMainUI();
+        } else {
+            showAuthUI();
+        }
+    }
+
+    function showAuthUI() {
+        // Clear existing content
+        uiElement.innerHTML = '';
+        uiElement.appendChild(handle);
+        uiElement.appendChild(createAuthUI());
+        setTimeout(() => {
+            const passwordInput = document.getElementById('passwordInput');
+            if (passwordInput) passwordInput.focus();
+        }, 100);
+    }
+
+    function showMainUI() {
+        // Clear existing content and show main UI
+        uiElement.innerHTML = '';
+        uiElement.appendChild(handle);
+        uiElement.appendChild(mainUIContent);
+        
+        // Load persisted quiz ID after main UI is shown
+        setTimeout(() => loadPersistedQuizId(), 500);
+    }
+
+    // Initialize authentication check
+    checkAuthStatus();
 
     // Create language selector (hidden UI state)
     const langSelector = document.createElement('div');
@@ -822,8 +999,7 @@
     document.body.appendChild(langSelector);
     document.body.appendChild(uiElement);
     
-    // Load persisted quiz ID after UI is ready
-    setTimeout(() => loadPersistedQuizId(), 500);
+    // Quiz loading will be handled after authentication
 
     function parseQuestions(questionsJson){
         let questions = [];

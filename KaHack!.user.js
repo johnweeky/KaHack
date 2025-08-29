@@ -1089,7 +1089,7 @@
         const nextQuestionDisplay = document.getElementById('nextQuestionDisplay');
         if (!nextQuestionDisplay) return;
 
-        // In special mode, hide the entire preview container
+        // In special mode, hide the entire preview container (including the label)
         const nextQuestionContainer = nextQuestionDisplay.closest('div');
         if (specialMode) {
             if (nextQuestionContainer) {

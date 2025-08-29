@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Kahoot Exploit (Mobile Friendly)
-// @version      2.0.0
+// @version      2.1.0
 // @description  Show-only Kahoot helper! Highlights correct answers and shows next question preview. Stealth UI with password protection. No auto-answering - manual clicking only.
 // @namespace    https://github.com/johnweeky
 // @match        https://kahoot.it/*
@@ -8,7 +8,7 @@
 // @grant        none
 // ==/UserScript==
 (function() {
-    var Version = '2.0.0';
+    var Version = '2.1.0';
 
     var questions = [];
     var info = {
@@ -42,6 +42,8 @@
         }
         return val;
     }
+
+
 
     // Reset UI function – clears input, color, questions array, etc.
     function resetUI() {
@@ -172,17 +174,88 @@
         }
     });
 
+    // Button container for Enter, Persist, Delete
+    const buttonContainer = document.createElement('div');
+    buttonContainer.style.display = 'flex';
+    buttonContainer.style.marginTop = '0.5vw';
+    buttonContainer.style.gap = '0.3vw';
+    buttonContainer.style.width = '27.8vw';
+    buttonContainer.style.justifyContent = 'space-between';
+    
     // Enter button with consistent font
     const enterButton = document.createElement('button');
     enterButton.textContent = 'Enter';
     enterButton.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif'; 
-    enterButton.style.display = 'block';
-    enterButton.style.marginTop = '0.5vw';
-    enterButton.style.width = '27.8vw';
+    enterButton.style.width = '45%';
     enterButton.style.fontSize = '1.15vw';
     enterButton.style.cursor = 'pointer';
     enterButton.addEventListener('click', handleInputChange);
-    inputContainer.appendChild(enterButton);
+    buttonContainer.appendChild(enterButton);
+    
+    // Persist button
+    const persistButton = document.createElement('button');
+    persistButton.textContent = 'Persist';
+    persistButton.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif'; 
+    persistButton.style.width = '25%';
+    persistButton.style.fontSize = '1.15vw';
+    persistButton.style.cursor = 'pointer';
+    persistButton.style.backgroundColor = '#4CAF50';
+    persistButton.style.color = 'white';
+    persistButton.addEventListener('click', persistQuizId);
+    buttonContainer.appendChild(persistButton);
+    
+    // Delete button
+    const deleteButton = document.createElement('button');
+    deleteButton.textContent = 'Delete';
+    deleteButton.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif'; 
+    deleteButton.style.width = '25%';
+    deleteButton.style.fontSize = '1.15vw';
+    deleteButton.style.cursor = 'pointer';
+    deleteButton.style.backgroundColor = '#f44336';
+    deleteButton.style.color = 'white';
+    deleteButton.addEventListener('click', deletePersistedQuizId);
+    buttonContainer.appendChild(deleteButton);
+    
+    inputContainer.appendChild(buttonContainer);
+
+    // Persistence functions
+    function persistQuizId() {
+        const quizId = sanitizeInput(inputBox.value);
+        if (quizId.trim() === "") {
+            alert("Please enter a Quiz ID first!");
+            return;
+        }
+        localStorage.setItem('kahoot_persisted_quiz', quizId);
+        persistButton.style.backgroundColor = '#45a049';
+        persistButton.textContent = 'Saved!';
+        setTimeout(() => {
+            persistButton.style.backgroundColor = '#4CAF50';
+            persistButton.textContent = 'Persist';
+        }, 2000);
+        console.log("Quiz ID persisted:", quizId);
+    }
+    
+    function deletePersistedQuizId() {
+        localStorage.removeItem('kahoot_persisted_quiz');
+        deleteButton.style.backgroundColor = '#d32f2f';
+        deleteButton.textContent = 'Deleted!';
+        setTimeout(() => {
+            deleteButton.style.backgroundColor = '#f44336';
+            deleteButton.textContent = 'Delete';
+        }, 2000);
+        console.log("Persisted Quiz ID deleted");
+    }
+    
+    function loadPersistedQuizId() {
+        const persistedQuiz = localStorage.getItem('kahoot_persisted_quiz');
+        if (persistedQuiz) {
+            inputBox.value = persistedQuiz;
+            inputBox.style.backgroundColor = '#e8f5e8';
+            console.log("Loaded persisted Quiz ID:", persistedQuiz);
+            // Auto-load the quiz
+            setTimeout(() => handleInputChange(), 1000); // Delay to ensure UI is ready
+        }
+    }
 
     // Dropdown for fallback suggestions
     const dropdown = document.createElement('div');
@@ -406,9 +479,16 @@
       .floating-ui button {
         font-family: "Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
         font-size: 3vw !important;
-        width: 60vw !important;
         height: 7vw !important;
         border-radius: 2vw !important;
+      }
+      /* Button container on mobile */
+      .floating-ui div[style*="display: flex"][style*="gap: 0.3vw"] {
+        width: 60vw !important;
+        gap: 1vw !important;
+      }
+      .floating-ui div[style*="display: flex"][style*="gap: 0.3vw"] button {
+        font-size: 2.5vw !important;
       }
       .floating-ui .custom-slider::-webkit-slider-thumb {
         width: 4vw !important;
@@ -540,14 +620,12 @@
         isMinimized = !isMinimized;
         if (isMinimized) {
             headerText.style.display = 'none';
-            header2.style.display = 'none';
             header3.style.display = 'none';
             header4.style.display = 'none';
             inputContainer.style.display = 'none';
             questionsLabel.style.display = 'none';
             versionLabel.style.display = 'none';
             githubContainer.style.display = 'none';
-
             showAnswersSwitchContainer.style.display = 'none';
             nextQuestionContainer.style.display = 'none';
             uiElement.style.height = '2.5vw';
@@ -556,20 +634,18 @@
             minimizeButton.style.height = '100%';
         } else {
             headerText.style.display = 'block';
-            header2.style.display = 'block';
             header3.style.display = 'block';
             header4.style.display = 'block';
             inputContainer.style.display = 'flex';
             questionsLabel.style.display = 'block';
             versionLabel.style.display = 'block';
             githubContainer.style.display = 'block';
+            showAnswersSwitchContainer.style.display = 'flex';
+            nextQuestionContainer.style.display = 'block';
             handle.style.height = '2.5vw';
             uiElement.style.height = 'auto';
             closeButton.style.height = '2.5vw';
             minimizeButton.style.height = '2.5vw';
-
-            showAnswersSwitchContainer.style.display = 'flex';
-            nextQuestionContainer.style.display = 'block';
         }
     });
 
@@ -745,6 +821,9 @@
 
     document.body.appendChild(langSelector);
     document.body.appendChild(uiElement);
+    
+    // Load persisted quiz ID after UI is ready
+    setTimeout(() => loadPersistedQuizId(), 500);
 
     function parseQuestions(questionsJson){
         let questions = [];

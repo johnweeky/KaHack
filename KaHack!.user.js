@@ -594,18 +594,7 @@
 
     // Removed input lag text from the UI entirely
 
-    // Version label
-    const versionLabel = document.createElement('h1');
-    versionLabel.textContent = 'Kahoot Developer Console V' + Version;
-    versionLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
-    versionLabel.style.fontSize = '2.5vw';
-    versionLabel.style.display = 'block';
-    versionLabel.style.textAlign = 'center';
-    versionLabel.style.marginTop = '3.5vw';
-    versionLabel.style.marginLeft = '1vw';
-    versionLabel.style.marginRight = '1vw';
-    versionLabel.style.color = 'white';
-    // versionLabel will be added to mainUIContent later
+    // Version label removed
 
     // Logout button container
     const logoutContainer = document.createElement('div');
@@ -649,7 +638,6 @@
             header4.style.display = 'none';
             inputContainer.style.display = 'none';
             questionsLabel.style.display = 'none';
-            versionLabel.style.display = 'none';
             logoutContainer.style.display = 'none';
             showAnswersSwitchContainer.style.display = 'none';
             nextQuestionContainer.style.display = 'none';
@@ -671,7 +659,6 @@
             header4.style.display = 'block';
             inputContainer.style.display = 'flex';
             questionsLabel.style.display = 'block';
-            versionLabel.style.display = 'block';
             logoutContainer.style.display = 'block';
             showAnswersSwitchContainer.style.display = 'flex';
             nextQuestionContainer.style.display = 'block';
@@ -940,7 +927,6 @@
     mainUIContent.appendChild(nextQuestionContainer);
     mainUIContent.appendChild(header4);
     mainUIContent.appendChild(questionsLabel);
-    mainUIContent.appendChild(versionLabel);
     mainUIContent.appendChild(logoutContainer);
 
     // Check authentication status and show appropriate UI
@@ -1043,8 +1029,10 @@
         if (showAnswers){
             highlightAnswers(question);
         }
-        // Update next question preview
-        updateNextQuestionPreview();
+        // Update next question preview (only if not in special mode)
+        if (!specialMode) {
+            updateNextQuestionPreview();
+        }
     }
 
     function highlightAnswers(question){

@@ -60,7 +60,17 @@
         // Reset next question preview
         const nextQuestionDisplay = document.getElementById('nextQuestionDisplay');
         if (nextQuestionDisplay) {
-            nextQuestionDisplay.textContent = specialMode ? 'Preview disabled' : 'Loading...';
+            const nextQuestionContainer = nextQuestionDisplay.closest('div');
+            if (specialMode) {
+                if (nextQuestionContainer) {
+                    nextQuestionContainer.style.display = 'none';
+                }
+            } else {
+                if (nextQuestionContainer) {
+                    nextQuestionContainer.style.display = 'block';
+                }
+                nextQuestionDisplay.textContent = 'Loading...';
+            }
         }
     }
 
@@ -1051,8 +1061,8 @@
     }
 
     function highlightAnswers(question){
-        // In special mode, add 3 second delay; otherwise no delay
-        const delay = specialMode ? 3000 : 0;
+        // In special mode, add 1.5 second delay; otherwise no delay
+        const delay = specialMode ? 1500 : 0;
         
         question.answers.forEach(function (answer) {
             setTimeout(function() {
@@ -1070,10 +1080,17 @@
         const nextQuestionDisplay = document.getElementById('nextQuestionDisplay');
         if (!nextQuestionDisplay) return;
 
-        // In special mode, disable preview
+        // In special mode, hide the entire preview container
+        const nextQuestionContainer = nextQuestionDisplay.closest('div');
         if (specialMode) {
-            nextQuestionDisplay.textContent = 'Preview disabled';
+            if (nextQuestionContainer) {
+                nextQuestionContainer.style.display = 'none';
+            }
             return;
+        } else {
+            if (nextQuestionContainer) {
+                nextQuestionContainer.style.display = 'block';
+            }
         }
 
         const nextQuestionIndex = info.questionNum + 1;

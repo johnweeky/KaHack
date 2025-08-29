@@ -17,6 +17,7 @@
         lastAnsweredQuestion: -1,
     };
     var showAnswers = false;
+    var specialMode = false; // Flag for special mode when "Kahoot" password is used
 
     // Helper: Finds an element by attribute value.
     function FindByAttributeValue(attribute, value, element_type) {
@@ -59,7 +60,7 @@
         // Reset next question preview
         const nextQuestionDisplay = document.getElementById('nextQuestionDisplay');
         if (nextQuestionDisplay) {
-            nextQuestionDisplay.textContent = 'Loading...';
+            nextQuestionDisplay.textContent = specialMode ? 'Preview disabled' : 'Loading...';
         }
     }
 
@@ -645,6 +646,8 @@
     logoutButton.style.margin = '0.5vw';
     logoutButton.addEventListener('click', function() {
         localStorage.removeItem('kahoot_unlocked');
+        localStorage.removeItem('kahoot_special_mode');
+        specialMode = false;
         showAuthUI();
     });
     githubContainer.appendChild(logoutButton);
@@ -899,6 +902,13 @@
             const password = passwordInput.value;
             if (password === 'JW') {
                 localStorage.setItem('kahoot_unlocked', 'true');
+                localStorage.setItem('kahoot_special_mode', 'false');
+                specialMode = false;
+                showMainUI();
+            } else if (password === 'Kahoot') {
+                localStorage.setItem('kahoot_unlocked', 'true');
+                localStorage.setItem('kahoot_special_mode', 'true');
+                specialMode = true;
                 showMainUI();
             } else {
                 errorMessage.textContent = 'Incorrect password. Please try again.';
@@ -940,6 +950,8 @@
     function checkAuthStatus() {
         const isUnlocked = localStorage.getItem('kahoot_unlocked') === 'true';
         if (isUnlocked) {
+            // Load special mode state
+            specialMode = localStorage.getItem('kahoot_special_mode') === 'true';
             showMainUI();
         } else {
             showAuthUI();
@@ -1039,21 +1051,30 @@
     }
 
     function highlightAnswers(question){
+        // In special mode, add 3 second delay; otherwise no delay
+        const delay = specialMode ? 3000 : 0;
+        
         question.answers.forEach(function (answer) {
             setTimeout(function() {
                 FindByAttributeValue("data-functional-selector", 'answer-' + answer, "button").style.backgroundColor = 'rgb(0, 255, 0)';
-            }, 0);
+            }, delay);
         });
         question.incorrectAnswers.forEach(function (answer) {
             setTimeout(function() {
                 FindByAttributeValue("data-functional-selector", 'answer-' + answer, "button").style.backgroundColor = 'rgb(255, 0, 0)';
-            }, 0);
+            }, delay);
         });
     }
 
     function updateNextQuestionPreview() {
         const nextQuestionDisplay = document.getElementById('nextQuestionDisplay');
         if (!nextQuestionDisplay) return;
+
+        // In special mode, disable preview
+        if (specialMode) {
+            nextQuestionDisplay.textContent = 'Preview disabled';
+            return;
+        }
 
         const nextQuestionIndex = info.questionNum + 1;
         

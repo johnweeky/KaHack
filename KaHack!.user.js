@@ -607,51 +607,12 @@
     versionLabel.style.color = 'white';
     // versionLabel will be added to mainUIContent later
 
-    // "Links:" container
-    const githubContainer = document.createElement('div');
-    githubContainer.style.textAlign = 'center';
-    githubContainer.style.marginTop = '1vw';
+    // Logout button container
+    const logoutContainer = document.createElement('div');
+    logoutContainer.style.textAlign = 'center';
+    logoutContainer.style.marginTop = '1vw';
 
-    const githubLabel = document.createElement('span');
-    githubLabel.textContent = 'Links: ';
-    githubLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
-    githubLabel.style.fontSize = '1.5vw';
-    githubLabel.style.margin = '0 1vw';
-    githubLabel.style.color = 'white';
-    githubContainer.appendChild(githubLabel);
-
-    // 1) JW Tool Suite → https://landing.kahoot.space
-    const link1 = document.createElement('a');
-    link1.textContent = 'JW Tool Suite';
-    link1.href = 'https://landing.kahoot.space';
-    link1.target = '_blank';
-    link1.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
-    link1.style.fontSize = '1.5vw';
-    link1.style.margin = '0 1vw';
-    link1.style.color = 'white';
-    githubContainer.appendChild(link1);
-
-    // Developed by text
-    const developedByLabel = document.createElement('span');
-    developedByLabel.textContent = 'Developed by ';
-    developedByLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
-    developedByLabel.style.fontSize = '1.5vw';
-    developedByLabel.style.margin = '0 0.5vw';
-    developedByLabel.style.color = 'white';
-    githubContainer.appendChild(developedByLabel);
-
-    // 2) John Wee → https://johnwee.co
-    const link2 = document.createElement('a');
-    link2.textContent = 'John Wee';
-    link2.href = 'https://johnwee.co';
-    link2.target = '_blank';
-    link2.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
-    link2.style.fontSize = '1.5vw';
-    link2.style.margin = '0 0.5vw';
-    link2.style.color = 'white';
-    githubContainer.appendChild(link2);
-
-    // Add logout button to github container
+    // Add logout button
     const logoutButton = document.createElement('button');
     logoutButton.textContent = 'Logout';
     logoutButton.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
@@ -669,9 +630,9 @@
         specialMode = false;
         showAuthUI();
     });
-    githubContainer.appendChild(logoutButton);
+    logoutContainer.appendChild(logoutButton);
 
-    // githubContainer will be added to mainUIContent later
+    // logoutContainer will be added to mainUIContent later
 
     closeButton.addEventListener('click', () => {
         document.body.removeChild(uiElement);
@@ -689,7 +650,7 @@
             inputContainer.style.display = 'none';
             questionsLabel.style.display = 'none';
             versionLabel.style.display = 'none';
-            githubContainer.style.display = 'none';
+            logoutContainer.style.display = 'none';
             showAnswersSwitchContainer.style.display = 'none';
             nextQuestionContainer.style.display = 'none';
             
@@ -711,7 +672,7 @@
             inputContainer.style.display = 'flex';
             questionsLabel.style.display = 'block';
             versionLabel.style.display = 'block';
-            githubContainer.style.display = 'block';
+            logoutContainer.style.display = 'block';
             showAnswersSwitchContainer.style.display = 'flex';
             nextQuestionContainer.style.display = 'block';
             
@@ -980,7 +941,7 @@
     mainUIContent.appendChild(header4);
     mainUIContent.appendChild(questionsLabel);
     mainUIContent.appendChild(versionLabel);
-    mainUIContent.appendChild(githubContainer);
+    mainUIContent.appendChild(logoutContainer);
 
     // Check authentication status and show appropriate UI
     function checkAuthStatus() {
@@ -1174,8 +1135,10 @@
             info.lastAnsweredQuestion = info.questionNum;
             onQuestionStart();
         }
-        // Update next question preview whenever question changes
-        updateNextQuestionPreview();
+        // Update next question preview whenever question changes (only if not in special mode)
+        if (!specialMode) {
+            updateNextQuestionPreview();
+        }
         questionsLabel.textContent = 'Question ' + (info.questionNum + 1) + ' / ' + info.numQuestions;
     }, 1);
 })();

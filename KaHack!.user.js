@@ -92,7 +92,7 @@
     handle.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
     handle.style.fontSize = '1.5vw';
     // Changed top handle text
-    handle.textContent = 'Connection Error';
+    handle.textContent = 'Kahoot';
     handle.style.cursor = 'pointer'; // Make it clickable
     handle.style.color = 'white';
     handle.style.width = '97.5%';
@@ -596,7 +596,7 @@
 
     // Version label
     const versionLabel = document.createElement('h1');
-    versionLabel.textContent = 'Connection Error V' + Version;
+    versionLabel.textContent = 'Kahoot Developer Console V' + Version;
     versionLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
     versionLabel.style.fontSize = '2.5vw';
     versionLabel.style.display = 'block';
@@ -631,14 +631,23 @@
     link1.style.color = 'white';
     githubContainer.appendChild(link1);
 
+    // Developed by text
+    const developedByLabel = document.createElement('span');
+    developedByLabel.textContent = 'Developed by ';
+    developedByLabel.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
+    developedByLabel.style.fontSize = '1.5vw';
+    developedByLabel.style.margin = '0 0.5vw';
+    developedByLabel.style.color = 'white';
+    githubContainer.appendChild(developedByLabel);
+
     // 2) John Wee → https://johnwee.co
     const link2 = document.createElement('a');
     link2.textContent = 'John Wee';
-    link2.href = 'https://johnw.ee';
+    link2.href = 'https://johnwee.co';
     link2.target = '_blank';
     link2.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
     link2.style.fontSize = '1.5vw';
-    link2.style.margin = '0 1vw';
+    link2.style.margin = '0 0.5vw';
     link2.style.color = 'white';
     githubContainer.appendChild(link2);
 

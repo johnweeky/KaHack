@@ -682,6 +682,7 @@
     minimizeButton.addEventListener('click', () => {
         isMinimized = !isMinimized;
         if (isMinimized) {
+            // Hide main UI elements
             headerText.style.display = 'none';
             header3.style.display = 'none';
             header4.style.display = 'none';
@@ -691,11 +692,19 @@
             githubContainer.style.display = 'none';
             showAnswersSwitchContainer.style.display = 'none';
             nextQuestionContainer.style.display = 'none';
+            
+            // Hide authentication UI if it's shown
+            const authContainer = document.getElementById('authContainer');
+            if (authContainer) {
+                authContainer.style.display = 'none';
+            }
+            
             uiElement.style.height = '2.5vw';
             handle.style.height = '100%';
             closeButton.style.height = '100%';
             minimizeButton.style.height = '100%';
         } else {
+            // Show main UI elements
             headerText.style.display = 'block';
             header3.style.display = 'block';
             header4.style.display = 'block';
@@ -705,6 +714,14 @@
             githubContainer.style.display = 'block';
             showAnswersSwitchContainer.style.display = 'flex';
             nextQuestionContainer.style.display = 'block';
+            
+            // Show authentication UI if it exists and we're not authenticated
+            const authContainer = document.getElementById('authContainer');
+            const isUnlocked = localStorage.getItem('kahoot_unlocked') === 'true';
+            if (authContainer && !isUnlocked) {
+                authContainer.style.display = 'flex';
+            }
+            
             handle.style.height = '2.5vw';
             uiElement.style.height = 'auto';
             closeButton.style.height = '2.5vw';

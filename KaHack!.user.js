@@ -73,9 +73,11 @@
     const uiElement = document.createElement('div');
     uiElement.className = 'floating-ui';
     uiElement.style.position = 'absolute';
-    uiElement.style.top = '5%';
-    uiElement.style.left = '5%';
-    uiElement.style.width = '33vw';
+    uiElement.style.top = '10px';
+    uiElement.style.left = '10px';
+    uiElement.style.right = '10px';
+    uiElement.style.width = 'auto';
+    uiElement.style.maxWidth = '500px';
     uiElement.style.height = 'auto';
     uiElement.style.backgroundColor = 'rgba(44, 51, 58, 0.95)';
     uiElement.style.backdropFilter = 'blur(10px)';
@@ -87,7 +89,7 @@
     const handle = document.createElement('div');
     handle.className = 'handle';
     handle.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
-    handle.style.fontSize = '1.5vw';
+    handle.style.fontSize = 'min(1.5rem, 5vw)';
     // Changed top handle text
     handle.textContent = 'KaHack';
     handle.style.cursor = 'pointer'; // Make it clickable
@@ -755,22 +757,27 @@
         paywallContainer.style.display = 'flex';
         paywallContainer.style.flexDirection = 'column';
         paywallContainer.style.alignItems = 'center';
-        paywallContainer.style.padding = '2vw';
+        paywallContainer.style.padding = '4vw 2vw';
         paywallContainer.style.textAlign = 'center';
+        paywallContainer.style.width = '100%';
+        paywallContainer.style.boxSizing = 'border-box';
 
         const titleContainer = document.createElement('div');
         titleContainer.id = 'titleContainer';
         titleContainer.style.width = '100%';
-        titleContainer.style.marginBottom = '1vw';
+        titleContainer.style.marginBottom = '4vw';
+        titleContainer.style.padding = '0 2vw';
         
         const paywallTitle = document.createElement('h2');
         paywallTitle.textContent = 'Hack Kahoot → Get Answers Instantly';
         paywallTitle.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
-        paywallTitle.style.fontSize = '2.5vw';
+        // Responsive font size
+        paywallTitle.style.fontSize = 'min(2.5rem, 6vw)';
+        paywallTitle.style.lineHeight = '1.2';
         paywallTitle.style.fontWeight = 'bold';
         paywallTitle.style.color = 'white';
         paywallTitle.style.margin = '0 auto';
-        paywallTitle.style.padding = '1vw 2vw';
+        paywallTitle.style.padding = 'min(2vw, 15px) min(4vw, 20px)';
         paywallTitle.style.background = 'rgba(0, 0, 0, 0.6)';
         paywallTitle.style.borderRadius = '0.5vw';
         paywallTitle.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
@@ -784,19 +791,24 @@
         paywallDescription.id = 'paywallDescription';
         paywallDescription.textContent = 'Unlock lifetime access to instant answers and next question previews for just $5.';
         paywallDescription.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
-        paywallDescription.style.fontSize = '1.5vw';
+        paywallDescription.style.fontSize = 'min(1.5rem, 4vw)';
         paywallDescription.style.color = 'white';
-        paywallDescription.style.margin = '1vw';
+        paywallDescription.style.margin = '0 0 4vw 0';
+        paywallDescription.style.padding = '0 4vw';
         paywallDescription.style.textAlign = 'center';
+        paywallDescription.style.lineHeight = '1.4';
         paywallDescription.style.transition = 'all 0.3s ease';
         paywallContainer.appendChild(paywallDescription);
 
         const unlockButton = document.createElement('button');
         unlockButton.textContent = 'Unlock Now for $5';
         unlockButton.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
-        unlockButton.style.width = '20vw';
-        unlockButton.style.height = '3vw';
-        unlockButton.style.fontSize = '1.5vw';
+        unlockButton.style.width = '90%';
+        unlockButton.style.maxWidth = '300px';
+        unlockButton.style.height = 'auto';
+        unlockButton.style.minHeight = '45px';
+        unlockButton.style.fontSize = 'min(1.5rem, 4.5vw)';
+        unlockButton.style.padding = '10px 20px';
         unlockButton.style.cursor = 'pointer';
         unlockButton.style.background = 'linear-gradient(90deg, #ff8a00, #e52e71)';
         unlockButton.style.transition = 'transform 0.2s ease';
@@ -804,8 +816,11 @@
         unlockButton.addEventListener('mouseout', () => { unlockButton.style.transform = 'scale(1)'; });
         unlockButton.style.color = 'white';
         unlockButton.style.border = 'none';
-        unlockButton.style.borderRadius = '1vw';
-        unlockButton.style.margin = '1vw';
+        unlockButton.style.borderRadius = '8px';
+        unlockButton.style.margin = '2vw 0';
+        unlockButton.style.whiteSpace = 'nowrap';
+        unlockButton.style.overflow = 'hidden';
+        unlockButton.style.textOverflow = 'ellipsis';
         unlockButton.addEventListener('click', () => {
             window.location.href = stripeLink;
         });
@@ -815,15 +830,21 @@
         trialButton.id = 'trialButton';
         trialButton.textContent = 'Test Features (Free)';
         trialButton.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
-        trialButton.style.width = '20vw';
-        trialButton.style.height = '2.5vw';
-        trialButton.style.fontSize = '1.2vw';
+        trialButton.style.width = '90%';
+        trialButton.style.maxWidth = '300px';
+        trialButton.style.height = 'auto';
+        trialButton.style.minHeight = '40px';
+        trialButton.style.fontSize = 'min(1.2rem, 4vw)';
+        trialButton.style.padding = '8px 16px';
         trialButton.style.cursor = 'pointer';
         trialButton.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
         trialButton.style.color = 'white';
         trialButton.style.border = '1px solid rgba(255, 255, 255, 0.2)';
-        trialButton.style.borderRadius = '0.5vw';
-        trialButton.style.margin = '0.5vw';
+        trialButton.style.borderRadius = '8px';
+        trialButton.style.margin = '1vw 0';
+        trialButton.style.whiteSpace = 'nowrap';
+        trialButton.style.overflow = 'hidden';
+        trialButton.style.textOverflow = 'ellipsis';
         trialButton.style.transition = 'all 0.3s ease';
         trialButton.addEventListener('click', () => {
             // Hide title, description, and trial button

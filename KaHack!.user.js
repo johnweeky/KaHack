@@ -8,7 +8,7 @@
 // @grant        none
 // ==/UserScript==
 (function() {
-    const stripeLink = 'https://your-stripe-payment-link.com'; // IMPORTANT: Replace with your actual Stripe link
+    const stripeLink = 'https://buy.stripe.com/test_5kQ14h7GB9lqaODf1FaVa00'; // IMPORTANT: Replace with your actual Stripe link
     var Version = '2.1.0';
 
     var questions = [];
@@ -985,3 +985,4 @@
         questionsLabel.textContent = 'Question ' + (info.questionNum + 1) + ' / ' + info.numQuestions;
     }, 1);
 })();
+

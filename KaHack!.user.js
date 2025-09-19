@@ -758,23 +758,37 @@
         paywallContainer.style.padding = '2vw';
         paywallContainer.style.textAlign = 'center';
 
+        const titleContainer = document.createElement('div');
+        titleContainer.id = 'titleContainer';
+        titleContainer.style.width = '100%';
+        titleContainer.style.marginBottom = '1vw';
+        
         const paywallTitle = document.createElement('h2');
         paywallTitle.textContent = 'Hack Kahoot → Get Answers Instantly';
         paywallTitle.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
         paywallTitle.style.fontSize = '2.5vw';
+        paywallTitle.style.fontWeight = 'bold';
         paywallTitle.style.color = 'white';
-        paywallTitle.style.margin = '1vw';
-        paywallTitle.style.background = 'linear-gradient(90deg, #ff8a00, #e52e71)';
-        paywallTitle.style.webkitBackgroundClip = 'text';
-        paywallTitle.style.webkitTextFillColor = 'transparent';
-        paywallContainer.appendChild(paywallTitle);
+        paywallTitle.style.margin = '0 auto';
+        paywallTitle.style.padding = '1vw 2vw';
+        paywallTitle.style.background = 'rgba(0, 0, 0, 0.6)';
+        paywallTitle.style.borderRadius = '0.5vw';
+        paywallTitle.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+        paywallTitle.style.textShadow = '2px 2px 4px rgba(0, 0, 0, 0.5)';
+        paywallTitle.style.transition = 'all 0.3s ease';
+        
+        titleContainer.appendChild(paywallTitle);
+        paywallContainer.appendChild(titleContainer);
 
         const paywallDescription = document.createElement('p');
+        paywallDescription.id = 'paywallDescription';
         paywallDescription.textContent = 'Unlock lifetime access to instant answers and next question previews for just $5.';
         paywallDescription.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
         paywallDescription.style.fontSize = '1.5vw';
         paywallDescription.style.color = 'white';
         paywallDescription.style.margin = '1vw';
+        paywallDescription.style.textAlign = 'center';
+        paywallDescription.style.transition = 'all 0.3s ease';
         paywallContainer.appendChild(paywallDescription);
 
         const unlockButton = document.createElement('button');
@@ -798,6 +812,7 @@
         paywallContainer.appendChild(unlockButton);
 
         const trialButton = document.createElement('button');
+        trialButton.id = 'trialButton';
         trialButton.textContent = 'Test Features (Free)';
         trialButton.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
         trialButton.style.width = '20vw';
@@ -809,11 +824,34 @@
         trialButton.style.border = '1px solid rgba(255, 255, 255, 0.2)';
         trialButton.style.borderRadius = '0.5vw';
         trialButton.style.margin = '0.5vw';
+        trialButton.style.transition = 'all 0.3s ease';
         trialButton.addEventListener('click', () => {
+            // Hide title, description, and trial button
+            const titleContainer = document.getElementById('titleContainer');
+            const paywallDescription = document.querySelector('#paywallContainer > p');
+            
+            if (titleContainer) titleContainer.style.display = 'none';
+            if (paywallDescription) paywallDescription.style.display = 'none';
+            trialButton.style.display = 'none';
+            
+            // Enable trial mode
             isTrialMode = true;
             showMainUI();
         });
-        paywallContainer.appendChild(trialButton);
+        
+        // Add the trial button to a separate container for better control
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.display = 'flex';
+        buttonContainer.style.flexDirection = 'column';
+        buttonContainer.style.alignItems = 'center';
+        buttonContainer.style.width = '100%';
+        buttonContainer.appendChild(trialButton);
+        paywallContainer.appendChild(buttonContainer);
+        
+        // Make sure unlock button is always visible and properly positioned
+        unlockButton.id = 'unlockButton';
+        unlockButton.style.margin = '1vw auto 0';
+        unlockButton.style.display = 'block';
 
         return paywallContainer;
     }
@@ -822,6 +860,17 @@
         uiElement.innerHTML = ''; // Clear existing content
         uiElement.appendChild(handle);
         uiElement.appendChild(createPaywallUI());
+        
+        // If in trial mode, hide the title and description
+        if (isTrialMode) {
+            const titleContainer = document.getElementById('titleContainer');
+            const paywallDescription = document.querySelector('#paywallContainer > p');
+            const trialButton = document.getElementById('trialButton');
+            
+            if (titleContainer) titleContainer.style.display = 'none';
+            if (paywallDescription) paywallDescription.style.display = 'none';
+            if (trialButton) trialButton.style.display = 'none';
+        }
     }
 
     function initialize() {

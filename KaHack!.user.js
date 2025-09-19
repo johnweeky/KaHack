@@ -1,13 +1,14 @@
 // ==UserScript==
 // @name         Kahoot Exploit (Mobile Friendly)
 // @version      2.1.0
-// @description  Show-only Kahoot helper! Highlights correct answers and shows next question preview. Stealth UI with password protection. No auto-answering - manual clicking only.
+// @description  Show-only Kahoot helper! Highlights correct answers and shows next question preview. No auto-answering - manual clicking only.
 // @namespace    https://github.com/johnweeky
 // @match        https://kahoot.it/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=kahoot.it
 // @grant        none
 // ==/UserScript==
 (function() {
+    const stripeLink = 'https://your-stripe-payment-link.com'; // IMPORTANT: Replace with your actual Stripe link
     var Version = '2.1.0';
 
     var questions = [];
@@ -17,7 +18,6 @@
         lastAnsweredQuestion: -1,
     };
     var showAnswers = false;
-    var specialMode = false; // Flag for special mode when "Kahoot" password is used
 
     // Helper: Finds an element by attribute value.
     function FindByAttributeValue(attribute, value, element_type) {
@@ -61,16 +61,10 @@
         const nextQuestionDisplay = document.getElementById('nextQuestionDisplay');
         if (nextQuestionDisplay) {
             const nextQuestionContainer = nextQuestionDisplay.closest('div');
-            if (specialMode) {
-                if (nextQuestionContainer) {
-                    nextQuestionContainer.style.display = 'none';
-                }
-            } else {
                 if (nextQuestionContainer) {
                     nextQuestionContainer.style.display = 'block';
                 }
                 nextQuestionDisplay.textContent = 'Loading...';
-            }
         }
     }
 
@@ -536,28 +530,6 @@
         font-size: 3vw !important;
       }
       
-      /* Authentication UI mobile styles */
-      #authContainer h2 {
-        font-size: 4vw !important;
-      }
-      #authContainer p {
-        font-size: 3vw !important;
-      }
-      #passwordInput {
-        width: 60vw !important;
-        height: 6vw !important;
-        font-size: 3vw !important;
-        border-radius: 2vw !important;
-      }
-      #authContainer button {
-        width: 25vw !important;
-        height: 7vw !important;
-        font-size: 3vw !important;
-        border-radius: 2vw !important;
-      }
-      #authError {
-        font-size: 2.5vw !important;
-      }
     }
     `;
     document.head.appendChild(style);
@@ -596,32 +568,6 @@
 
     // Version label removed
 
-    // Logout button container
-    const logoutContainer = document.createElement('div');
-    logoutContainer.style.textAlign = 'center';
-    logoutContainer.style.marginTop = '1vw';
-
-    // Add logout button
-    const logoutButton = document.createElement('button');
-    logoutButton.textContent = 'Logout';
-    logoutButton.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
-    logoutButton.style.fontSize = '1.2vw';
-    logoutButton.style.backgroundColor = '#ff4444';
-    logoutButton.style.color = 'white';
-    logoutButton.style.border = 'none';
-    logoutButton.style.borderRadius = '0.5vw';
-    logoutButton.style.padding = '0.3vw 1vw';
-    logoutButton.style.cursor = 'pointer';
-    logoutButton.style.margin = '0.5vw';
-    logoutButton.addEventListener('click', function() {
-        localStorage.removeItem('kahoot_unlocked');
-        localStorage.removeItem('kahoot_special_mode');
-        specialMode = false;
-        showAuthUI();
-    });
-    logoutContainer.appendChild(logoutButton);
-
-    // logoutContainer will be added to mainUIContent later
 
     closeButton.addEventListener('click', () => {
         document.body.removeChild(uiElement);
@@ -638,15 +584,8 @@
             header4.style.display = 'none';
             inputContainer.style.display = 'none';
             questionsLabel.style.display = 'none';
-            logoutContainer.style.display = 'none';
             showAnswersSwitchContainer.style.display = 'none';
             nextQuestionContainer.style.display = 'none';
-            
-            // Hide authentication UI if it's shown
-            const authContainer = document.getElementById('authContainer');
-            if (authContainer) {
-                authContainer.style.display = 'none';
-            }
             
             uiElement.style.height = '2.5vw';
             handle.style.height = '100%';
@@ -659,16 +598,8 @@
             header4.style.display = 'block';
             inputContainer.style.display = 'flex';
             questionsLabel.style.display = 'block';
-            logoutContainer.style.display = 'block';
             showAnswersSwitchContainer.style.display = 'flex';
             nextQuestionContainer.style.display = 'block';
-            
-            // Show authentication UI if it exists and we're not authenticated
-            const authContainer = document.getElementById('authContainer');
-            const isUnlocked = localStorage.getItem('kahoot_unlocked') === 'true';
-            if (authContainer && !isUnlocked) {
-                authContainer.style.display = 'flex';
-            }
             
             handle.style.height = '2.5vw';
             uiElement.style.height = 'auto';
@@ -810,111 +741,6 @@
         }
     }
 
-    // Password Authentication UI
-    function createAuthUI() {
-        const authContainer = document.createElement('div');
-        authContainer.id = 'authContainer';
-        authContainer.style.display = 'flex';
-        authContainer.style.flexDirection = 'column';
-        authContainer.style.alignItems = 'center';
-        authContainer.style.padding = '2vw';
-        authContainer.style.textAlign = 'center';
-
-        const authTitle = document.createElement('h2');
-        authTitle.textContent = 'AUTHENTICATION REQUIRED';
-        authTitle.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
-        authTitle.style.fontSize = '2vw';
-        authTitle.style.color = 'white';
-        authTitle.style.margin = '1vw';
-        authTitle.style.textShadow = `
-          -1px -1px 0 rgb(47, 47, 47),
-          1px -1px 0 rgb(47, 47, 47),
-          -1px 1px 0 rgb(47, 47, 47),
-          1px 1px 0 rgb(47, 47, 47)
-        `;
-        authContainer.appendChild(authTitle);
-
-        const authDescription = document.createElement('p');
-        authDescription.textContent = 'Enter password to access Connection Error';
-        authDescription.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
-        authDescription.style.fontSize = '1.3vw';
-        authDescription.style.color = 'white';
-        authDescription.style.margin = '1vw';
-        authContainer.appendChild(authDescription);
-
-        const passwordInput = document.createElement('input');
-        passwordInput.type = 'password';
-        passwordInput.id = 'passwordInput';
-        passwordInput.placeholder = 'Enter password...';
-        passwordInput.style.width = '20vw';
-        passwordInput.style.height = '2vw';
-        passwordInput.style.margin = '1vw';
-        passwordInput.style.padding = '0.5vw';
-        passwordInput.style.border = '.1vw solid black';
-        passwordInput.style.borderRadius = '1vw';
-        passwordInput.style.outline = 'none';
-        passwordInput.style.textAlign = 'center';
-        passwordInput.style.fontSize = '1.2vw';
-        passwordInput.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
-        authContainer.appendChild(passwordInput);
-
-        const loginButton = document.createElement('button');
-        loginButton.textContent = 'Login';
-        loginButton.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
-        loginButton.style.width = '10vw';
-        loginButton.style.height = '2.5vw';
-        loginButton.style.fontSize = '1.2vw';
-        loginButton.style.cursor = 'pointer';
-        loginButton.style.backgroundColor = '#4CAF50';
-        loginButton.style.color = 'white';
-        loginButton.style.border = 'none';
-        loginButton.style.borderRadius = '1vw';
-        loginButton.style.margin = '1vw';
-        authContainer.appendChild(loginButton);
-
-        const errorMessage = document.createElement('div');
-        errorMessage.id = 'authError';
-        errorMessage.style.color = '#ff4444';
-        errorMessage.style.fontSize = '1.1vw';
-        errorMessage.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
-        errorMessage.style.margin = '0.5vw';
-        errorMessage.style.display = 'none';
-        authContainer.appendChild(errorMessage);
-
-        // Login functionality
-        function attemptLogin() {
-            const password = passwordInput.value;
-            if (password === 'JW') {
-                localStorage.setItem('kahoot_unlocked', 'true');
-                localStorage.setItem('kahoot_special_mode', 'false');
-                specialMode = false;
-                showMainUI();
-            } else if (password === 'Kahoot') {
-                localStorage.setItem('kahoot_unlocked', 'true');
-                localStorage.setItem('kahoot_special_mode', 'true');
-                specialMode = true;
-                showMainUI();
-            } else {
-                errorMessage.textContent = 'Incorrect password. Please try again.';
-                errorMessage.style.display = 'block';
-                passwordInput.value = '';
-                passwordInput.focus();
-                setTimeout(() => {
-                    errorMessage.style.display = 'none';
-                }, 3000);
-            }
-        }
-
-        loginButton.addEventListener('click', attemptLogin);
-        passwordInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                attemptLogin();
-            }
-        });
-
-        return authContainer;
-    }
-
     // Main UI content container
     const mainUIContent = document.createElement('div');
     mainUIContent.id = 'mainUIContent';
@@ -927,43 +753,91 @@
     mainUIContent.appendChild(nextQuestionContainer);
     mainUIContent.appendChild(header4);
     mainUIContent.appendChild(questionsLabel);
-    mainUIContent.appendChild(logoutContainer);
-
-    // Check authentication status and show appropriate UI
-    function checkAuthStatus() {
-        const isUnlocked = localStorage.getItem('kahoot_unlocked') === 'true';
-        if (isUnlocked) {
-            // Load special mode state
-            specialMode = localStorage.getItem('kahoot_special_mode') === 'true';
-            showMainUI();
-        } else {
-            showAuthUI();
-        }
-    }
-
-    function showAuthUI() {
-        // Clear existing content
-        uiElement.innerHTML = '';
-        uiElement.appendChild(handle);
-        uiElement.appendChild(createAuthUI());
-        setTimeout(() => {
-            const passwordInput = document.getElementById('passwordInput');
-            if (passwordInput) passwordInput.focus();
-        }, 100);
-    }
 
     function showMainUI() {
-        // Clear existing content and show main UI
-        uiElement.innerHTML = '';
-        uiElement.appendChild(handle);
+        // Append main UI
         uiElement.appendChild(mainUIContent);
         
         // Load persisted quiz ID after main UI is shown
         setTimeout(() => loadPersistedQuizId(), 500);
     }
 
-    // Initialize authentication check
-    checkAuthStatus();
+    function createPaywallUI() {
+        const paywallContainer = document.createElement('div');
+        paywallContainer.id = 'paywallContainer';
+        paywallContainer.style.display = 'flex';
+        paywallContainer.style.flexDirection = 'column';
+        paywallContainer.style.alignItems = 'center';
+        paywallContainer.style.padding = '2vw';
+        paywallContainer.style.textAlign = 'center';
+
+        const paywallTitle = document.createElement('h2');
+        paywallTitle.textContent = 'Hack Kahoot → Get Answers Instantly';
+        paywallTitle.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
+        paywallTitle.style.fontSize = '2.5vw';
+        paywallTitle.style.color = 'white';
+        paywallTitle.style.margin = '1vw';
+        paywallTitle.style.textShadow = `
+          -1px -1px 0 rgb(47, 47, 47),
+          1px -1px 0 rgb(47, 47, 47),
+          -1px 1px 0 rgb(47, 47, 47),
+          1px 1px 0 rgb(47, 47, 47)
+        `;
+        paywallContainer.appendChild(paywallTitle);
+
+        const paywallDescription = document.createElement('p');
+        paywallDescription.textContent = 'Unlock lifetime access to instant answers and next question previews for just $5.';
+        paywallDescription.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
+        paywallDescription.style.fontSize = '1.5vw';
+        paywallDescription.style.color = 'white';
+        paywallDescription.style.margin = '1vw';
+        paywallContainer.appendChild(paywallDescription);
+
+        const unlockButton = document.createElement('button');
+        unlockButton.textContent = 'Unlock Now for $5';
+        unlockButton.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
+        unlockButton.style.width = '20vw';
+        unlockButton.style.height = '3vw';
+        unlockButton.style.fontSize = '1.5vw';
+        unlockButton.style.cursor = 'pointer';
+        unlockButton.style.backgroundColor = '#4CAF50';
+        unlockButton.style.color = 'white';
+        unlockButton.style.border = 'none';
+        unlockButton.style.borderRadius = '1vw';
+        unlockButton.style.margin = '1vw';
+        unlockButton.addEventListener('click', () => {
+            window.location.href = stripeLink;
+        });
+        paywallContainer.appendChild(unlockButton);
+
+        return paywallContainer;
+    }
+
+    function showPaywallUI() {
+        uiElement.innerHTML = ''; // Clear existing content
+        uiElement.appendChild(handle);
+        uiElement.appendChild(createPaywallUI());
+    }
+
+    function initialize() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('paid')) {
+            localStorage.setItem('kahoot_unlocked', 'true');
+            // Clean the URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        const isUnlocked = localStorage.getItem('kahoot_unlocked') === 'true';
+
+        if (isUnlocked) {
+            showMainUI();
+        } else {
+            showPaywallUI();
+        }
+    }
+
+    // Initialize UI
+    initialize();
 
     // Create language selector (hidden UI state)
     const langSelector = document.createElement('div');
@@ -1029,25 +903,16 @@
         if (showAnswers){
             highlightAnswers(question);
         }
-        // Update next question preview (only if not in special mode)
-        if (!specialMode) {
-            updateNextQuestionPreview();
-        }
+        // Update next question preview
+        updateNextQuestionPreview();
     }
 
     function highlightAnswers(question){
-        // In special mode, add 1.5 second delay; otherwise no delay
-        const delay = specialMode ? 1500 : 0;
-        
         question.answers.forEach(function (answer) {
-            setTimeout(function() {
-                FindByAttributeValue("data-functional-selector", 'answer-' + answer, "button").style.backgroundColor = 'rgb(0, 255, 0)';
-            }, delay);
+            FindByAttributeValue("data-functional-selector", 'answer-' + answer, "button").style.backgroundColor = 'rgb(0, 255, 0)';
         });
         question.incorrectAnswers.forEach(function (answer) {
-            setTimeout(function() {
-                FindByAttributeValue("data-functional-selector", 'answer-' + answer, "button").style.backgroundColor = 'rgb(255, 0, 0)';
-            }, delay);
+            FindByAttributeValue("data-functional-selector", 'answer-' + answer, "button").style.backgroundColor = 'rgb(255, 0, 0)';
         });
     }
 
@@ -1055,17 +920,9 @@
         const nextQuestionDisplay = document.getElementById('nextQuestionDisplay');
         if (!nextQuestionDisplay) return;
 
-        // In special mode, hide the entire preview container (including the label)
         const nextQuestionContainer = nextQuestionDisplay.closest('div');
-        if (specialMode) {
-            if (nextQuestionContainer) {
-                nextQuestionContainer.style.display = 'none';
-            }
-            return;
-        } else {
-            if (nextQuestionContainer) {
-                nextQuestionContainer.style.display = 'block';
-            }
+        if (nextQuestionContainer) {
+            nextQuestionContainer.style.display = 'block';
         }
 
         const nextQuestionIndex = info.questionNum + 1;
@@ -1123,10 +980,8 @@
             info.lastAnsweredQuestion = info.questionNum;
             onQuestionStart();
         }
-        // Update next question preview whenever question changes (only if not in special mode)
-        if (!specialMode) {
-            updateNextQuestionPreview();
-        }
+        // Update next question preview whenever question changes
+        updateNextQuestionPreview();
         questionsLabel.textContent = 'Question ' + (info.questionNum + 1) + ' / ' + info.numQuestions;
     }, 1);
 })();

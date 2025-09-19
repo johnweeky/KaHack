@@ -77,7 +77,8 @@
     uiElement.style.left = '10px';
     uiElement.style.right = '10px';
     uiElement.style.width = 'auto';
-    uiElement.style.maxWidth = '500px';
+    uiElement.style.maxWidth = '90%'; // More responsive max-width
+    uiElement.style.margin = '10px auto'; // Center the UI on larger screens
     uiElement.style.height = 'auto';
     uiElement.style.backgroundColor = 'rgba(44, 51, 58, 0.95)';
     uiElement.style.backdropFilter = 'blur(10px)';
@@ -757,7 +758,7 @@
         paywallContainer.style.display = 'flex';
         paywallContainer.style.flexDirection = 'column';
         paywallContainer.style.alignItems = 'center';
-        paywallContainer.style.padding = '4vw 2vw';
+        paywallContainer.style.padding = '3vw 1vw'; // Reduced padding for more space
         paywallContainer.style.textAlign = 'center';
         paywallContainer.style.width = '100%';
         paywallContainer.style.boxSizing = 'border-box';
@@ -765,14 +766,14 @@
         const titleContainer = document.createElement('div');
         titleContainer.id = 'titleContainer';
         titleContainer.style.width = '100%';
-        titleContainer.style.marginBottom = '4vw';
-        titleContainer.style.padding = '0 2vw';
+        titleContainer.style.marginBottom = '3vw'; // Reduced margin for better spacing
+        titleContainer.style.padding = '0 1vw'; // Reduced padding for more space
         
         const paywallTitle = document.createElement('h2');
         paywallTitle.textContent = 'Hack Kahoot → Get Answers Instantly';
         paywallTitle.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
         // Responsive font size
-        paywallTitle.style.fontSize = 'min(2.5rem, 6vw)';
+        paywallTitle.style.fontSize = 'min(2rem, 7vw)'; // Slightly smaller for better fit
         paywallTitle.style.lineHeight = '1.2';
         paywallTitle.style.fontWeight = 'bold';
         paywallTitle.style.color = 'white';
@@ -791,12 +792,14 @@
         paywallDescription.id = 'paywallDescription';
         paywallDescription.textContent = 'Unlock lifetime access to instant answers and next question previews for just $5.';
         paywallDescription.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
-        paywallDescription.style.fontSize = 'min(1.5rem, 4vw)';
+        paywallDescription.style.fontSize = 'min(1.2rem, 4.5vw)'; // Slightly larger for better readability
         paywallDescription.style.color = 'white';
         paywallDescription.style.margin = '0 0 4vw 0';
-        paywallDescription.style.padding = '0 4vw';
+        paywallDescription.style.padding = '0 2vw'; // Reduced side padding for more space
         paywallDescription.style.textAlign = 'center';
-        paywallDescription.style.lineHeight = '1.4';
+        paywallDescription.style.lineHeight = '1.6'; // Increased line height for better readability
+        paywallDescription.style.whiteSpace = 'normal'; // Allow text to wrap
+        paywallDescription.style.wordBreak = 'break-word'; // Break long words if needed
         paywallDescription.style.transition = 'all 0.3s ease';
         paywallContainer.appendChild(paywallDescription);
 
@@ -807,7 +810,10 @@
         unlockButton.style.maxWidth = '300px';
         unlockButton.style.height = 'auto';
         unlockButton.style.minHeight = '45px';
-        unlockButton.style.fontSize = 'min(1.5rem, 4.5vw)';
+        unlockButton.style.fontSize = 'min(1.3rem, 4.2vw)'; // Slightly smaller font for better fit
+        unlockButton.style.whiteSpace = 'normal'; // Allow text to wrap
+        unlockButton.style.height = 'auto'; // Allow button to grow with text
+        unlockButton.style.padding = '8px 12px'; // Adjusted padding for better fit
         unlockButton.style.padding = '10px 20px';
         unlockButton.style.cursor = 'pointer';
         unlockButton.style.background = 'linear-gradient(90deg, #ff8a00, #e52e71)';
@@ -817,7 +823,7 @@
         unlockButton.style.color = 'white';
         unlockButton.style.border = 'none';
         unlockButton.style.borderRadius = '8px';
-        unlockButton.style.margin = '2vw 0';
+        unlockButton.style.margin = '1.5vw 0'; // Reduced margin for better spacing
         unlockButton.style.whiteSpace = 'nowrap';
         unlockButton.style.overflow = 'hidden';
         unlockButton.style.textOverflow = 'ellipsis';
@@ -834,14 +840,18 @@
         trialButton.style.maxWidth = '300px';
         trialButton.style.height = 'auto';
         trialButton.style.minHeight = '40px';
-        trialButton.style.fontSize = 'min(1.2rem, 4vw)';
+        trialButton.style.fontSize = 'min(1.1rem, 4vw)'; // Slightly smaller font for better fit
+        trialButton.style.whiteSpace = 'normal'; // Allow text to wrap
+        trialButton.style.height = 'auto'; // Allow button to grow with text
+        trialButton.style.padding = '6px 10px'; // Adjusted padding for better fit
         trialButton.style.padding = '8px 16px';
         trialButton.style.cursor = 'pointer';
         trialButton.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
         trialButton.style.color = 'white';
         trialButton.style.border = '1px solid rgba(255, 255, 255, 0.2)';
         trialButton.style.borderRadius = '8px';
-        trialButton.style.margin = '1vw 0';
+        trialButton.style.margin = '1vw 0'; // Keep consistent margin
+        trialButton.style.maxWidth = '90%'; // Ensure button doesn't touch screen edges
         trialButton.style.whiteSpace = 'nowrap';
         trialButton.style.overflow = 'hidden';
         trialButton.style.textOverflow = 'ellipsis';

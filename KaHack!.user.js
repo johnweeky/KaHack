@@ -83,9 +83,10 @@
     uiElement.style.left = '10px';
     uiElement.style.right = '10px';
     uiElement.style.width = 'auto';
-    uiElement.style.maxWidth = '90%'; // More responsive max-width
+    uiElement.style.maxWidth = '400px'; // Fixed max-width for desktop
     uiElement.style.margin = '10px auto'; // Center the UI on larger screens
     uiElement.style.height = 'auto';
+    uiElement.style.transition = 'all 0.3s ease'; // Smooth transitions
     uiElement.style.backgroundColor = 'rgba(44, 51, 58, 0.95)';
     uiElement.style.backdropFilter = 'blur(10px)';
     uiElement.style.border = '1px solid rgba(255, 255, 255, 0.1)';
@@ -134,15 +135,16 @@
     minimizeButton.style.color = 'white';
     minimizeButton.style.position = 'absolute';
     minimizeButton.style.top = '0';
-    minimizeButton.style.right = '12.5%';
-    minimizeButton.style.width = '12.5%';
-    minimizeButton.style.height = '2.5vw';
-    minimizeButton.style.backgroundColor = 'gray';
-    minimizeButton.style.borderRadius = '0 0 0 0';
+    minimizeButton.style.right = '40px'; // Fixed position for better control
+    minimizeButton.style.width = '40px'; // Fixed width for better click target
+    minimizeButton.style.height = '30px';
+    minimizeButton.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
+    minimizeButton.style.borderRadius = '0 8px 0 0';
     minimizeButton.style.display = 'flex';
     minimizeButton.style.justifyContent = 'center';
     minimizeButton.style.alignItems = 'center';
     minimizeButton.style.cursor = 'pointer';
+    minimizeButton.style.zIndex = '10000'; // Ensure it stays on top
     handle.appendChild(minimizeButton);
 
     // QUIZ ID/NAME
@@ -566,62 +568,78 @@
 
 
     closeButton.addEventListener('click', () => {
-        document.body.removeChild(uiElement);
-        showAnswers = false;
-    });
 
-    let isMinimized = false;
-    minimizeButton.addEventListener('click', () => {
-        isMinimized = !isMinimized;
-        if (isMinimized) {
-            // Hide main UI elements
-            headerText.style.display = 'none';
-            header3.style.display = 'none';
-            header4.style.display = 'none';
-            inputContainer.style.display = 'none';
-            questionsLabel.style.display = 'none';
-            showAnswersSwitchContainer.style.display = 'none';
-            nextQuestionContainer.style.display = 'none';
-            
-            uiElement.style.height = '2.5vw';
-            handle.style.height = '100%';
-            closeButton.style.height = '100%';
-            minimizeButton.style.height = '100%';
-        } else {
-            // Show main UI elements
-            headerText.style.display = 'block';
-            header3.style.display = 'block';
-            header4.style.display = 'block';
-            inputContainer.style.display = 'flex';
-            questionsLabel.style.display = 'block';
-            showAnswersSwitchContainer.style.display = 'flex';
-            nextQuestionContainer.style.display = 'block';
-            
-            handle.style.height = '2.5vw';
-            uiElement.style.height = 'auto';
-            closeButton.style.height = '2.5vw';
-            minimizeButton.style.height = '2.5vw';
+let isMinimized = false;
+const uiElementsToToggle = [
+    headerText, 
+    inputContainer, 
+    header3, 
+    showAnswersSwitchContainer, 
+    nextQuestionContainer, 
+    header4, 
+    questionsLabel
+];
+
+minimizeButton.addEventListener('click', (e) => {
+    e.stopPropagation();
+    isMinimized = !isMinimized;
+    
+    // Toggle all UI elements
+    uiElementsToToggle.forEach(element => {
+        if (element) {
+            element.style.display = isMinimized ? 'none' : element._originalDisplay || 'block';
+            // Store original display value if not already stored
+            if (!element._originalDisplay && !isMinimized) {
+                element._originalDisplay = window.getComputedStyle(element).display;
+            }
         }
     });
+    
+    // Toggle container sizes and styles
+    if (isMinimized) {
+        // When minimizing
+        uiElement.style.overflow = 'hidden';
+        uiElement.style.height = '30px';
+        handle.style.borderRadius = '8px';
+        minimizeButton.textContent = '+';
+    } else {
+        // When maximizing
+        uiElement.style.overflow = 'visible';
+        uiElement.style.height = 'auto';
+        handle.style.borderRadius = '8px 8px 0 0';
+        minimizeButton.textContent = '─';
+    }
+});
 
-    // Add click handler to handle title for hiding UI
-    handle.addEventListener('click', function(e) {
-        // Only hide if clicking on the text part, not the buttons
-        if (e.target === handle) {
-            uiElement.style.display = 'none';
-            langSelector.style.display = 'block';
-        }
-    });
+// Handle drag functionality
+let isDragging = false;
+let offsetX, offsetY;
 
-    let isDragging = false;
-    let offsetX, offsetY;
-    handle.addEventListener('mousedown', (e) => {
-        // Prevent hiding when dragging
-        if (e.target === handle) {
-            isDragging = true;
-            offsetX = e.clientX - uiElement.getBoundingClientRect().left;
-            offsetY = e.clientY - uiElement.getBoundingClientRect().top;
-        }
+handle.addEventListener('mousedown', (e) => {
+    // Prevent hiding when dragging
+    if (e.target === handle) {
+        isDragging = true;
+        offsetX = e.clientX - uiElement.getBoundingClientRect().left;
+        offsetY = e.clientY - uiElement.getBoundingClientRect().top;
+    }
+});
+
+document.addEventListener('mousemove', (e) => {
+    if (isDragging) {
+        const x = e.clientX - offsetX;
+        const y = e.clientY - offsetY;
+        uiElement.style.left = x + 'px';
+        uiElement.style.top = y + 'px';
+    }
+});
+
+document.addEventListener('mouseup', (e) => {
+    if (isDragging) {
+        isDragging = false;
+        // Prevent click event from firing if we were dragging
+        e.stopPropagation();
+    }
+});
     });
     document.addEventListener('mousemove', (e) => {
         if (isDragging) {
@@ -986,9 +1004,18 @@
     langSelector.title = 'Language Selector';
 
     // Add click handler to show UI
-    langSelector.addEventListener('click', function() {
+    langSelector.addEventListener('click', () => {
         uiElement.style.display = 'block';
         langSelector.style.display = 'none';
+    });
+
+    handle.addEventListener('click', (e) => {
+        if (e.target === handle) {
+            uiElement.style.display = 'none';
+            if (langSelector) {
+                langSelector.style.display = 'block';
+            }
+        }
     });
 
     document.body.appendChild(langSelector);

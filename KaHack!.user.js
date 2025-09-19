@@ -8,7 +8,7 @@
 // @grant        none
 // ==/UserScript==
 (function() {
-    const stripeLink = 'https://buy.stripe.com/00w7sEdnd3843cV9MO77O00'; // IMPORTANT: Replace with your actual Stripe link
+    const stripeLink = 'https://buy.stripe.com/test_5kQ14h7GB9lqaODf1FaVa00'; // IMPORTANT: Replace with your actual Stripe link
     var Version = '2.1.0';
 
     var questions = [];
@@ -65,13 +65,7 @@
                 if (nextQuestionContainer) {
                     nextQuestionContainer.style.display = 'block';
                 }
-                if (isTrialMode) {
-                    nextQuestionDisplay.textContent = 'Disabled in test mode';
-                    nextQuestionDisplay.style.color = '#ffc107'; // Yellow color for disabled state
-                } else {
-                    nextQuestionDisplay.textContent = 'Loading...';
-                    nextQuestionDisplay.style.color = ''; // Reset color
-                }
+                nextQuestionDisplay.textContent = 'Loading...';
         }
     }
 
@@ -754,41 +748,6 @@
         // Append main UI
         uiElement.appendChild(mainUIContent);
         
-        // Add test mode indicator if in trial mode
-        if (isTrialMode) {
-            const testModeIndicator = document.createElement('div');
-            testModeIndicator.style.textAlign = 'center';
-            testModeIndicator.style.marginBottom = '10px';
-            testModeIndicator.style.padding = '8px';
-            testModeIndicator.style.background = 'rgba(255, 193, 7, 0.2)';
-            testModeIndicator.style.borderRadius = '4px';
-            testModeIndicator.style.borderLeft = '3px solid #ffc107';
-            
-            const testModeText = document.createElement('div');
-            testModeText.textContent = 'Test Mode';
-            testModeText.style.fontWeight = 'bold';
-            testModeText.style.color = '#ffc107';
-            testModeText.style.marginBottom = '4px';
-            testModeText.style.fontSize = '1.2em';
-            
-            const testModeDesc = document.createElement('div');
-            testModeDesc.textContent = '1.5s answer delay';
-            testModeDesc.style.color = '#ffeb3b';
-            testModeDesc.style.fontSize = '0.9em';
-            
-            testModeIndicator.appendChild(testModeText);
-            testModeIndicator.appendChild(testModeDesc);
-            
-            // Insert test mode indicator at the top of the UI
-            uiElement.insertBefore(testModeIndicator, mainUIContent);
-            
-            // Change unlock button text if it exists
-            const unlockBtn = document.querySelector('#unlockButton');
-            if (unlockBtn) {
-                unlockBtn.textContent = 'Unlock Full Features for $5';
-            }
-        }
-        
         // Load persisted quiz ID after main UI is shown
         setTimeout(() => loadPersistedQuizId(), 500);
     }
@@ -845,7 +804,7 @@
         paywallContainer.appendChild(paywallDescription);
 
         const unlockButton = document.createElement('button');
-        unlockButton.textContent = isTrialMode ? 'Unlock Full Features for $5' : 'Unlock Now for $5';
+        unlockButton.textContent = 'Unlock Now for $5';
         unlockButton.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
         unlockButton.style.width = '90%';
         unlockButton.style.maxWidth = '300px';

@@ -129,6 +129,23 @@
     closeButton.style.cursor = 'pointer';
     handle.appendChild(closeButton);
 
+    const minimizeButton = document.createElement('div');
+    minimizeButton.className = 'minimize-button';
+    minimizeButton.textContent = '─';
+    minimizeButton.style.color = 'white';
+    minimizeButton.style.position = 'absolute';
+    minimizeButton.style.top = '0';
+    minimizeButton.style.right = '40px'; // Fixed position for better control
+    minimizeButton.style.width = '40px'; // Fixed width for better click target
+    minimizeButton.style.height = '30px';
+    minimizeButton.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
+    minimizeButton.style.borderRadius = '0 8px 0 0';
+    minimizeButton.style.display = 'flex';
+    minimizeButton.style.justifyContent = 'center';
+    minimizeButton.style.alignItems = 'center';
+    minimizeButton.style.cursor = 'pointer';
+    minimizeButton.style.zIndex = '10000'; // Ensure it stays on top
+    handle.appendChild(minimizeButton);
 
     // QUIZ ID/NAME
     const headerText = document.createElement('h2');
@@ -551,13 +568,52 @@
 
 
     closeButton.addEventListener('click', () => {
-        uiElement.style.display = 'none';
-        langSelector.style.display = 'block';
-    });
 
-    // Handle drag functionality
-    let isDragging = false;
-    let offsetX, offsetY;
+let isMinimized = false;
+const uiElementsToToggle = [
+    headerText, 
+    inputContainer, 
+    header3, 
+    showAnswersSwitchContainer, 
+    nextQuestionContainer, 
+    header4, 
+    questionsLabel
+];
+
+minimizeButton.addEventListener('click', (e) => {
+    e.stopPropagation();
+    isMinimized = !isMinimized;
+    
+    // Toggle all UI elements
+    uiElementsToToggle.forEach(element => {
+        if (element) {
+            element.style.display = isMinimized ? 'none' : element._originalDisplay || 'block';
+            // Store original display value if not already stored
+            if (!element._originalDisplay && !isMinimized) {
+                element._originalDisplay = window.getComputedStyle(element).display;
+            }
+        }
+    });
+    
+    // Toggle container sizes and styles
+    if (isMinimized) {
+        // When minimizing
+        uiElement.style.overflow = 'hidden';
+        uiElement.style.height = '30px';
+        handle.style.borderRadius = '8px';
+        minimizeButton.textContent = '+';
+    } else {
+        // When maximizing
+        uiElement.style.overflow = 'visible';
+        uiElement.style.height = 'auto';
+        handle.style.borderRadius = '8px 8px 0 0';
+        minimizeButton.textContent = '─';
+    }
+});
+
+// Handle drag functionality
+let isDragging = false;
+let offsetX, offsetY;
 
 handle.addEventListener('mousedown', (e) => {
     // Prevent hiding when dragging
@@ -584,6 +640,21 @@ document.addEventListener('mouseup', (e) => {
         e.stopPropagation();
     }
 });
+    });
+    document.addEventListener('mousemove', (e) => {
+        if (isDragging) {
+            const x = e.clientX - offsetX;
+            const y = e.clientY - offsetY;
+            uiElement.style.left = x + 'px';
+            uiElement.style.top = y + 'px';
+        }
+    });
+    document.addEventListener('mouseup', (e) => {
+        if (isDragging) {
+            isDragging = false;
+            // Prevent click event from firing if we were dragging
+            e.stopPropagation();
+        }
     });
 
     // --- Fallback Dropdown Search ---

@@ -18,6 +18,7 @@
         lastAnsweredQuestion: -1,
     };
     var showAnswers = false;
+    var isTrialMode = false;
 
     // Helper: Finds an element by attribute value.
     function FindByAttributeValue(attribute, value, element_type) {
@@ -76,7 +77,9 @@
     uiElement.style.left = '5%';
     uiElement.style.width = '33vw';
     uiElement.style.height = 'auto';
-    uiElement.style.backgroundColor = '#381272';
+    uiElement.style.backgroundColor = 'rgba(44, 51, 58, 0.95)';
+    uiElement.style.backdropFilter = 'blur(10px)';
+    uiElement.style.border = '1px solid rgba(255, 255, 255, 0.1)';
     uiElement.style.borderRadius = '1vw';
     uiElement.style.boxShadow = '0px 0px 10px 0px rgba(0, 0, 0, 0.5)';
     uiElement.style.zIndex = '9999';
@@ -86,12 +89,12 @@
     handle.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
     handle.style.fontSize = '1.5vw';
     // Changed top handle text
-    handle.textContent = 'Kahoot';
+    handle.textContent = 'KaHack';
     handle.style.cursor = 'pointer'; // Make it clickable
     handle.style.color = 'white';
     handle.style.width = '97.5%';
     handle.style.height = '2.5vw';
-    handle.style.backgroundColor = '#321066';
+    handle.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
     handle.style.borderRadius = '1vw 1vw 0 0';
     handle.style.cursor = 'grab';
     handle.style.textAlign = 'left';
@@ -142,12 +145,6 @@
     headerText.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
     headerText.style.fontSize = '2vw';
     headerText.style.color = 'white';
-    headerText.style.textShadow = `
-      -1px -1px 0 rgb(47, 47, 47),
-      1px -1px 0 rgb(47, 47, 47),
-      -1px 1px 0 rgb(47, 47, 47),
-      1px 1px 0 rgb(47, 47, 47)
-    `;
     // headerText will be added to mainUIContent later
 
     // Input container (relative for the dropdown)
@@ -159,14 +156,16 @@
 
     const inputBox = document.createElement('input');
     inputBox.type = 'text';
-    inputBox.style.color = 'black';
-    inputBox.placeholder = 'Quiz Id/Name of Quiz here...';
+    inputBox.style.color = 'white';
+    inputBox.style.backgroundColor = 'rgba(0, 0, 0, 0.2)';
+    inputBox.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+    inputBox.placeholder = 'Enter Quiz ID or Name...';
     inputBox.style.width = '27.8vw';
-    inputBox.style.height = '1.5vw';
+    inputBox.style.height = '2vw';
     inputBox.style.margin = '0';
-    inputBox.style.padding = '0';
-    inputBox.style.border = '.1vw solid black';
-    inputBox.style.borderRadius = '1vw';
+    inputBox.style.padding = '0.5vw';
+    inputBox.style.boxSizing = 'border-box';
+    inputBox.style.borderRadius = '0.5vw';
     inputBox.style.outline = 'none';
     inputBox.style.textAlign = 'center';
     inputBox.style.fontSize = '1.15vw';
@@ -310,12 +309,6 @@
     header3.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
     header3.style.fontSize = '2vw';
     header3.style.color = 'white';
-    header3.style.textShadow = `
-      -1px -1px 0 rgb(47, 47, 47),
-      1px -1px 0 rgb(47, 47, 47),
-      -1px 1px 0 rgb(47, 47, 47),
-      1px 1px 0 rgb(47, 47, 47)
-    `;
     // header3 will be added to mainUIContent later
 
     const showAnswersSwitchContainer = document.createElement('div');
@@ -543,12 +536,6 @@
     header4.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
     header4.style.fontSize = '2vw';
     header4.style.color = 'white';
-    header4.style.textShadow = `
-      -1px -1px 0 rgb(47, 47, 47),
-      1px -1px 0 rgb(47, 47, 47),
-      -1px 1px 0 rgb(47, 47, 47),
-      1px 1px 0 rgb(47, 47, 47)
-    `;
     // header4 will be added to mainUIContent later
 
     // questionsLabel
@@ -777,12 +764,9 @@
         paywallTitle.style.fontSize = '2.5vw';
         paywallTitle.style.color = 'white';
         paywallTitle.style.margin = '1vw';
-        paywallTitle.style.textShadow = `
-          -1px -1px 0 rgb(47, 47, 47),
-          1px -1px 0 rgb(47, 47, 47),
-          -1px 1px 0 rgb(47, 47, 47),
-          1px 1px 0 rgb(47, 47, 47)
-        `;
+        paywallTitle.style.background = 'linear-gradient(90deg, #ff8a00, #e52e71)';
+        paywallTitle.style.webkitBackgroundClip = 'text';
+        paywallTitle.style.webkitTextFillColor = 'transparent';
         paywallContainer.appendChild(paywallTitle);
 
         const paywallDescription = document.createElement('p');
@@ -800,7 +784,10 @@
         unlockButton.style.height = '3vw';
         unlockButton.style.fontSize = '1.5vw';
         unlockButton.style.cursor = 'pointer';
-        unlockButton.style.backgroundColor = '#4CAF50';
+        unlockButton.style.background = 'linear-gradient(90deg, #ff8a00, #e52e71)';
+        unlockButton.style.transition = 'transform 0.2s ease';
+        unlockButton.addEventListener('mouseover', () => { unlockButton.style.transform = 'scale(1.05)'; });
+        unlockButton.addEventListener('mouseout', () => { unlockButton.style.transform = 'scale(1)'; });
         unlockButton.style.color = 'white';
         unlockButton.style.border = 'none';
         unlockButton.style.borderRadius = '1vw';
@@ -809,6 +796,24 @@
             window.location.href = stripeLink;
         });
         paywallContainer.appendChild(unlockButton);
+
+        const trialButton = document.createElement('button');
+        trialButton.textContent = 'Test Features (Free)';
+        trialButton.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
+        trialButton.style.width = '20vw';
+        trialButton.style.height = '2.5vw';
+        trialButton.style.fontSize = '1.2vw';
+        trialButton.style.cursor = 'pointer';
+        trialButton.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+        trialButton.style.color = 'white';
+        trialButton.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+        trialButton.style.borderRadius = '0.5vw';
+        trialButton.style.margin = '0.5vw';
+        trialButton.addEventListener('click', () => {
+            isTrialMode = true;
+            showMainUI();
+        });
+        paywallContainer.appendChild(trialButton);
 
         return paywallContainer;
     }
@@ -821,7 +826,7 @@
 
     function initialize() {
         const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('paid')) {
+        if (urlParams.get('paid') === 'unlock_3f9xQ7mJ29dK8hPwR1') {
             localStorage.setItem('kahoot_unlocked', 'true');
             // Clean the URL
             window.history.replaceState({}, document.title, window.location.pathname);
@@ -898,21 +903,29 @@
         return questions;
     }
 
-    function onQuestionStart(){
+        function onQuestionStart(){
         var question = questions[info.questionNum];
         if (showAnswers){
             highlightAnswers(question);
         }
-        // Update next question preview
-        updateNextQuestionPreview();
+        // Update next question preview (disabled in trial mode)
+        if (!isTrialMode) {
+            updateNextQuestionPreview();
+        }
     }
 
     function highlightAnswers(question){
+        const delay = isTrialMode ? 1500 : 0;
+
         question.answers.forEach(function (answer) {
-            FindByAttributeValue("data-functional-selector", 'answer-' + answer, "button").style.backgroundColor = 'rgb(0, 255, 0)';
+            setTimeout(() => {
+                FindByAttributeValue("data-functional-selector", 'answer-' + answer, "button").style.backgroundColor = 'rgb(0, 255, 0)';
+            }, delay);
         });
         question.incorrectAnswers.forEach(function (answer) {
-            FindByAttributeValue("data-functional-selector", 'answer-' + answer, "button").style.backgroundColor = 'rgb(255, 0, 0)';
+            setTimeout(() => {
+                FindByAttributeValue("data-functional-selector", 'answer-' + answer, "button").style.backgroundColor = 'rgb(255, 0, 0)';
+            }, delay);
         });
     }
 
@@ -980,8 +993,10 @@
             info.lastAnsweredQuestion = info.questionNum;
             onQuestionStart();
         }
-        // Update next question preview whenever question changes
-        updateNextQuestionPreview();
+        // Update next question preview whenever question changes (disabled in trial mode)
+        if (!isTrialMode) {
+            updateNextQuestionPreview();
+        }
         questionsLabel.textContent = 'Question ' + (info.questionNum + 1) + ' / ' + info.numQuestions;
     }, 1);
 })();

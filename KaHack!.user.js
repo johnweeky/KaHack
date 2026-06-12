@@ -806,18 +806,30 @@
     }
 
     function highlightAnswers(question){
+        if (!question) return;
         question.answers.forEach(function (answer) {
             let el = document.querySelector('[data-functional-selector="answer-' + answer + '"]');
-            if (el) {
-                el.style.setProperty('background-color', '#00ff00', 'important');
-                el.style.setProperty('background', '#00ff00', 'important');
+            if (el && !el.dataset.kahackHighlighted) {
+                el.dataset.kahackHighlighted = 'true';
+                el.style.setProperty('opacity', '1', 'important');
+                el.style.setProperty('transform', 'scale(1.05)', 'important');
+                el.style.setProperty('box-shadow', '0 0 20px 5px #00ff00', 'important');
+                el.style.setProperty('border', '5px solid #00ff00', 'important');
+                el.style.setProperty('z-index', '10', 'important');
+                
+                Array.from(el.children).forEach(child => {
+                    child.style.setProperty('background-color', '#00ff00', 'important');
+                    child.style.setProperty('background', '#00ff00', 'important');
+                });
             }
         });
         question.incorrectAnswers.forEach(function (answer) {
             let el = document.querySelector('[data-functional-selector="answer-' + answer + '"]');
-            if (el) {
-                el.style.setProperty('background-color', '#ff0000', 'important');
-                el.style.setProperty('background', '#ff0000', 'important');
+            if (el && !el.dataset.kahackHighlighted) {
+                el.dataset.kahackHighlighted = 'true';
+                el.style.setProperty('opacity', '0.25', 'important');
+                el.style.setProperty('filter', 'grayscale(100%)', 'important');
+                el.style.setProperty('transform', 'scale(0.95)', 'important');
             }
         });
     }
@@ -882,12 +894,20 @@
         if (textElement){
             info.questionNum = +textElement.textContent - 1;
         }
-        if (document.querySelector('[data-functional-selector="answer-0"]') && info.lastAnsweredQuestion != info.questionNum) {
+        
+        let answersPresent = document.querySelector('[data-functional-selector="answer-0"]');
+        
+        if (answersPresent && info.lastAnsweredQuestion != info.questionNum) {
             info.lastAnsweredQuestion = info.questionNum;
             onQuestionStart();
         }
+        
+        if (showAnswers && answersPresent && info.questionNum >= 0) {
+            highlightAnswers(questions[info.questionNum]);
+        }
+        
         updateNextQuestionPreview();
         questionsLabel.textContent = 'Question ' + (info.questionNum + 1) + ' / ' + info.numQuestions;
-    }, 1);
+    }, 50);
 })();
 

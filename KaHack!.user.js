@@ -8,7 +8,6 @@
 // @grant        none
 // ==/UserScript==
 (function() {
-    const stripeLink = 'https://buy.stripe.com/00w7sEdnd3843cV9MO77O00'; // IMPORTANT: Replace with your actual Stripe link
     var Version = '2.1.0';
 
     var questions = [];
@@ -18,7 +17,6 @@
         lastAnsweredQuestion: -1,
     };
     var showAnswers = false;
-    var isTrialMode = false;
 
     // Helper: Finds an element by attribute value.
     function FindByAttributeValue(attribute, value, element_type) {
@@ -65,13 +63,8 @@
                 if (nextQuestionContainer) {
                     nextQuestionContainer.style.display = 'block';
                 }
-                if (isTrialMode) {
-                    nextQuestionDisplay.textContent = 'Disabled in test mode';
-                    nextQuestionDisplay.style.color = '#ffc107'; // Yellow color for disabled state
-                } else {
-                    nextQuestionDisplay.textContent = 'Loading...';
-                    nextQuestionDisplay.style.color = ''; // Reset color
-                }
+                nextQuestionDisplay.textContent = 'Loading...';
+                nextQuestionDisplay.style.color = ''; // Reset color
         }
     }
 
@@ -574,29 +567,13 @@
     minimizeButton.addEventListener('click', () => {
         isMinimized = !isMinimized;
         if (isMinimized) {
-            // Hide main UI elements
-            headerText.style.display = 'none';
-            header3.style.display = 'none';
-            header4.style.display = 'none';
-            inputContainer.style.display = 'none';
-            questionsLabel.style.display = 'none';
-            showAnswersSwitchContainer.style.display = 'none';
-            nextQuestionContainer.style.display = 'none';
-            
+            mainUIContent.style.display = 'none';
             uiElement.style.height = '2.5vw';
             handle.style.height = '100%';
             closeButton.style.height = '100%';
             minimizeButton.style.height = '100%';
         } else {
-            // Show main UI elements
-            headerText.style.display = 'block';
-            header3.style.display = 'block';
-            header4.style.display = 'block';
-            inputContainer.style.display = 'flex';
-            questionsLabel.style.display = 'block';
-            showAnswersSwitchContainer.style.display = 'flex';
-            nextQuestionContainer.style.display = 'block';
-            
+            mainUIContent.style.display = 'block';
             handle.style.height = '2.5vw';
             uiElement.style.height = 'auto';
             closeButton.style.height = '2.5vw';
@@ -754,216 +731,12 @@
         // Append main UI
         uiElement.appendChild(mainUIContent);
         
-        // Add test mode indicator if in trial mode
-        if (isTrialMode) {
-            const testModeIndicator = document.createElement('div');
-            testModeIndicator.style.textAlign = 'center';
-            testModeIndicator.style.marginBottom = '10px';
-            testModeIndicator.style.padding = '8px';
-            testModeIndicator.style.background = 'rgba(255, 193, 7, 0.2)';
-            testModeIndicator.style.borderRadius = '4px';
-            testModeIndicator.style.borderLeft = '3px solid #ffc107';
-            
-            const testModeText = document.createElement('div');
-            testModeText.textContent = 'Test Mode';
-            testModeText.style.fontWeight = 'bold';
-            testModeText.style.color = '#ffc107';
-            testModeText.style.marginBottom = '4px';
-            testModeText.style.fontSize = '1.2em';
-            
-            const testModeDesc = document.createElement('div');
-            testModeDesc.textContent = '1.5s answer delay';
-            testModeDesc.style.color = '#ffeb3b';
-            testModeDesc.style.fontSize = '0.9em';
-            
-            testModeIndicator.appendChild(testModeText);
-            testModeIndicator.appendChild(testModeDesc);
-            
-            // Insert test mode indicator at the top of the UI
-            uiElement.insertBefore(testModeIndicator, mainUIContent);
-            
-            // Change unlock button text if it exists
-            const unlockBtn = document.querySelector('#unlockButton');
-            if (unlockBtn) {
-                unlockBtn.textContent = 'Unlock Full Features for $5';
-            }
-        }
-        
         // Load persisted quiz ID after main UI is shown
         setTimeout(() => loadPersistedQuizId(), 500);
     }
 
-    function createPaywallUI() {
-        const paywallContainer = document.createElement('div');
-        paywallContainer.id = 'paywallContainer';
-        paywallContainer.style.display = 'flex';
-        paywallContainer.style.flexDirection = 'column';
-        paywallContainer.style.alignItems = 'center';
-        paywallContainer.style.padding = '3vw 1vw'; // Reduced padding for more space
-        paywallContainer.style.textAlign = 'center';
-        paywallContainer.style.width = '100%';
-        paywallContainer.style.boxSizing = 'border-box';
-
-        const titleContainer = document.createElement('div');
-        titleContainer.id = 'titleContainer';
-        titleContainer.style.width = '100%';
-        titleContainer.style.marginBottom = '3vw'; // Reduced margin for better spacing
-        titleContainer.style.padding = '0 1vw'; // Reduced padding for more space
-        
-        const paywallTitle = document.createElement('h2');
-        paywallTitle.textContent = 'Hack Kahoot → Get Answers Instantly';
-        paywallTitle.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
-        // Responsive font size
-        paywallTitle.style.fontSize = 'min(2rem, 7vw)'; // Slightly smaller for better fit
-        paywallTitle.style.lineHeight = '1.2';
-        paywallTitle.style.fontWeight = 'bold';
-        paywallTitle.style.color = 'white';
-        paywallTitle.style.margin = '0 auto';
-        paywallTitle.style.padding = 'min(2vw, 15px) min(4vw, 20px)';
-        paywallTitle.style.background = 'rgba(0, 0, 0, 0.6)';
-        paywallTitle.style.borderRadius = '0.5vw';
-        paywallTitle.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-        paywallTitle.style.textShadow = '2px 2px 4px rgba(0, 0, 0, 0.5)';
-        paywallTitle.style.transition = 'all 0.3s ease';
-        
-        titleContainer.appendChild(paywallTitle);
-        paywallContainer.appendChild(titleContainer);
-
-        const paywallDescription = document.createElement('p');
-        paywallDescription.id = 'paywallDescription';
-        paywallDescription.textContent = 'Unlock lifetime access to instant answers and next question previews for just $5.';
-        paywallDescription.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
-        paywallDescription.style.fontSize = 'min(1.2rem, 4.5vw)'; // Slightly larger for better readability
-        paywallDescription.style.color = 'white';
-        paywallDescription.style.margin = '0 0 4vw 0';
-        paywallDescription.style.padding = '0 2vw'; // Reduced side padding for more space
-        paywallDescription.style.textAlign = 'center';
-        paywallDescription.style.lineHeight = '1.6'; // Increased line height for better readability
-        paywallDescription.style.whiteSpace = 'normal'; // Allow text to wrap
-        paywallDescription.style.wordBreak = 'break-word'; // Break long words if needed
-        paywallDescription.style.transition = 'all 0.3s ease';
-        paywallContainer.appendChild(paywallDescription);
-
-        const unlockButton = document.createElement('button');
-        unlockButton.textContent = isTrialMode ? 'Unlock Full Features for $5' : 'Unlock Now for $5';
-        unlockButton.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
-        unlockButton.style.width = '90%';
-        unlockButton.style.maxWidth = '300px';
-        unlockButton.style.height = 'auto';
-        unlockButton.style.minHeight = '45px';
-        unlockButton.style.fontSize = 'min(1.3rem, 4.2vw)'; // Slightly smaller font for better fit
-        unlockButton.style.whiteSpace = 'normal'; // Allow text to wrap
-        unlockButton.style.height = 'auto'; // Allow button to grow with text
-        unlockButton.style.padding = '8px 12px'; // Adjusted padding for better fit
-        unlockButton.style.padding = '10px 20px';
-        unlockButton.style.cursor = 'pointer';
-        unlockButton.style.background = 'linear-gradient(90deg, #ff8a00, #e52e71)';
-        unlockButton.style.transition = 'transform 0.2s ease';
-        unlockButton.addEventListener('mouseover', () => { unlockButton.style.transform = 'scale(1.05)'; });
-        unlockButton.addEventListener('mouseout', () => { unlockButton.style.transform = 'scale(1)'; });
-        unlockButton.style.color = 'white';
-        unlockButton.style.border = 'none';
-        unlockButton.style.borderRadius = '8px';
-        unlockButton.style.margin = '1.5vw 0'; // Reduced margin for better spacing
-        unlockButton.style.whiteSpace = 'nowrap';
-        unlockButton.style.overflow = 'hidden';
-        unlockButton.style.textOverflow = 'ellipsis';
-        unlockButton.addEventListener('click', () => {
-            window.location.href = stripeLink;
-        });
-        paywallContainer.appendChild(unlockButton);
-
-        const trialButton = document.createElement('button');
-        trialButton.id = 'trialButton';
-        trialButton.textContent = 'Test Features (Free)';
-        trialButton.style.fontFamily = '"Montserrat", "Noto Sans Arabic", "Helvetica Neue", Helvetica, Arial, sans-serif';
-        trialButton.style.width = '90%';
-        trialButton.style.maxWidth = '300px';
-        trialButton.style.height = 'auto';
-        trialButton.style.minHeight = '40px';
-        trialButton.style.fontSize = 'min(1.1rem, 4vw)'; // Slightly smaller font for better fit
-        trialButton.style.whiteSpace = 'normal'; // Allow text to wrap
-        trialButton.style.height = 'auto'; // Allow button to grow with text
-        trialButton.style.padding = '6px 10px'; // Adjusted padding for better fit
-        trialButton.style.padding = '8px 16px';
-        trialButton.style.cursor = 'pointer';
-        trialButton.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-        trialButton.style.color = 'white';
-        trialButton.style.border = '1px solid rgba(255, 255, 255, 0.2)';
-        trialButton.style.borderRadius = '8px';
-        trialButton.style.margin = '1vw 0'; // Keep consistent margin
-        trialButton.style.maxWidth = '90%'; // Ensure button doesn't touch screen edges
-        trialButton.style.whiteSpace = 'nowrap';
-        trialButton.style.overflow = 'hidden';
-        trialButton.style.textOverflow = 'ellipsis';
-        trialButton.style.transition = 'all 0.3s ease';
-        trialButton.addEventListener('click', () => {
-            // Hide title, description, and trial button
-            const titleContainer = document.getElementById('titleContainer');
-            const paywallDescription = document.querySelector('#paywallContainer > p');
-            
-            if (titleContainer) titleContainer.style.display = 'none';
-            if (paywallDescription) paywallDescription.style.display = 'none';
-            trialButton.style.display = 'none';
-            
-            // Enable trial mode
-            isTrialMode = true;
-            showMainUI();
-        });
-        
-        // Add the trial button to a separate container for better control
-        const buttonContainer = document.createElement('div');
-        buttonContainer.style.display = 'flex';
-        buttonContainer.style.flexDirection = 'column';
-        buttonContainer.style.alignItems = 'center';
-        buttonContainer.style.width = '100%';
-        buttonContainer.appendChild(trialButton);
-        paywallContainer.appendChild(buttonContainer);
-        
-        // Make sure unlock button is always visible and properly positioned
-        unlockButton.id = 'unlockButton';
-        unlockButton.style.margin = '1vw auto 0';
-        unlockButton.style.display = 'block';
-
-        return paywallContainer;
-    }
-
-    function showPaywallUI() {
-        uiElement.innerHTML = ''; // Clear existing content
-        uiElement.appendChild(handle);
-        uiElement.appendChild(createPaywallUI());
-        
-        // If in trial mode, hide the title and description
-        if (isTrialMode) {
-            const titleContainer = document.getElementById('titleContainer');
-            const paywallDescription = document.querySelector('#paywallContainer > p');
-            const trialButton = document.getElementById('trialButton');
-            
-            if (titleContainer) titleContainer.style.display = 'none';
-            if (paywallDescription) paywallDescription.style.display = 'none';
-            if (trialButton) trialButton.style.display = 'none';
-        }
-    }
-
-    function initialize() {
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('paid') === 'unlock_3f9xQ7mJ29dK8hPwR1') {
-            localStorage.setItem('kahoot_unlocked', 'true');
-            // Clean the URL
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
-
-        const isUnlocked = localStorage.getItem('kahoot_unlocked') === 'true';
-
-        if (isUnlocked) {
-            showMainUI();
-        } else {
-            showPaywallUI();
-        }
-    }
-
     // Initialize UI
-    initialize();
+    showMainUI();
 
     // Create language selector (hidden UI state)
     const langSelector = document.createElement('div');
@@ -1029,24 +802,23 @@
         if (showAnswers){
             highlightAnswers(question);
         }
-        // Update next question preview (disabled in trial mode)
-        if (!isTrialMode) {
-            updateNextQuestionPreview();
-        }
+        updateNextQuestionPreview();
     }
 
     function highlightAnswers(question){
-        const delay = isTrialMode ? 1500 : 0;
-
         question.answers.forEach(function (answer) {
-            setTimeout(() => {
-                FindByAttributeValue("data-functional-selector", 'answer-' + answer, "button").style.backgroundColor = 'rgb(0, 255, 0)';
-            }, delay);
+            let el = document.querySelector('[data-functional-selector="answer-' + answer + '"]');
+            if (el) {
+                el.style.setProperty('background-color', '#00ff00', 'important');
+                el.style.setProperty('background', '#00ff00', 'important');
+            }
         });
         question.incorrectAnswers.forEach(function (answer) {
-            setTimeout(() => {
-                FindByAttributeValue("data-functional-selector", 'answer-' + answer, "button").style.backgroundColor = 'rgb(255, 0, 0)';
-            }, delay);
+            let el = document.querySelector('[data-functional-selector="answer-' + answer + '"]');
+            if (el) {
+                el.style.setProperty('background-color', '#ff0000', 'important');
+                el.style.setProperty('background', '#ff0000', 'important');
+            }
         });
     }
 
@@ -1110,14 +882,11 @@
         if (textElement){
             info.questionNum = +textElement.textContent - 1;
         }
-        if (FindByAttributeValue("data-functional-selector", 'answer-0', "button") && info.lastAnsweredQuestion != info.questionNum) {
+        if (document.querySelector('[data-functional-selector="answer-0"]') && info.lastAnsweredQuestion != info.questionNum) {
             info.lastAnsweredQuestion = info.questionNum;
             onQuestionStart();
         }
-        // Update next question preview whenever question changes (disabled in trial mode)
-        if (!isTrialMode) {
-            updateNextQuestionPreview();
-        }
+        updateNextQuestionPreview();
         questionsLabel.textContent = 'Question ' + (info.questionNum + 1) + ' / ' + info.numQuestions;
     }, 1);
 })();
